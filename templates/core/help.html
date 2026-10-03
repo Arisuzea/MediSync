@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static ui %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pages/help.css' %}">{% endblock %}
+{% block content %}
+<section class="anim">
+  <h2 class="ptitle">Help &amp; support</h2>
+  <p class="lead">Clinic contacts, opening hours and answers to the questions students ask most.</p>
+  <div class="grid g3 mt26">
+    <div class="card"><span class="tic">{% icon "pin" 18 %}</span><p class="b mt14">Visit us</p><p class="sm muted" style="margin-top:6px;line-height:1.6">Room 2, Ground Floor<br>Clinic Wing, Main Campus<br>Mon–Fri · 8:00 AM – 5:00 PM</p></div>
+    <div class="card"><span class="tic">{% icon "sms" 18 %}</span><p class="b mt14">Call or text</p><p class="sm muted" style="margin-top:6px;line-height:1.6">+63 2 8123 4567<br>clinic@university.edu<br>Emergency: local 911</p></div>
+    <div class="card"><span class="tic">{% icon "hour" 18 %}</span><p class="b mt14">Live queue</p><p class="sm muted" style="margin-top:6px;line-height:1.6">Now serving #{{ queue.serving }} · you are #{{ active_appointment.queue_number }}</p><div class="mt14">{% include "components/button.html" with label="Open queue" href=queue_url variant="outline" size="sm" icon="list" %}</div></div>
+  </div>
+  <h3 class="mt26" style="font-size:17px">Frequently asked</h3>
+  <div class="mt14">
+    {% for q, a in faqs %}
+    <details class="faq"{% if forloop.first %} open{% endif %}>
+      <summary class="faqq"><span>{{ q }}</span>{% icon "cd" 18 %}</summary>
+      <div class="faqa">{{ a }}</div>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

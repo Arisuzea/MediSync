@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static ui %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pages/queue.css' %}">{% endblock %}
+{% block content %}
+<section class="anim">
+  <h2 class="ptitle">Queue status</h2>
+  <p class="lead">Live position and estimated wait. Sample data until Stage 7 connects the real queue.</p>
+  <div class="grid g2 mt26">
+    <div class="card">
+      <div class="chead"><div><h3>Your position</h3><p>{{ appt.practitioner }} · {{ appt.date|date:"M j" }} at {{ appt.time|time:"g:i A" }}</p></div>{% include "components/badge.html" with tone="med" text=appt.priority %}</div>
+      <div class="row between"><span class="sm muted">Your number</span><strong style="font-size:28px">#{{ appt.queue_number }}</strong></div>
+      <div class="row between mt8"><span class="sm muted">Now serving</span><strong>#{{ q.serving }}</strong></div>
+      <div class="row between mt8"><span class="sm muted">Students ahead</span><strong>{{ q.ahead }}</strong></div>
+      <div class="row between mt8"><span class="sm muted">Estimated wait</span><strong>{{ q.wait }}</strong></div>
+    </div>
+    <div class="card">
+      <div class="chead"><div><h3>Appointment</h3><p>{{ appt.reason }}</p></div></div>
+      <p class="sm">{{ appt.practitioner }}, {{ appt.role }}</p>
+      <p class="sm muted mt8">{{ appt.room }}</p>
+      <p class="xs muted mt20">Arrive 15 minutes early and bring your student ID.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block content %}
+<section class="anim">
+  <h2 class="ptitle">Visit history</h2>
+  <p class="lead">Your past clinic visits. Sample data until Stage 8 reads real appointments.</p>
+  <div class="card mt26" style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Reason</th><th>Practitioner</th><th>Date</th><th>Priority</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><strong>{{ r.reason }}</strong></td>
+          <td>{{ r.practitioner }}</td>
+          <td>{{ r.date|date:"M j, Y" }}</td>
+          <td>{% include "components/badge.html" with tone=r.priority|priority_tone text=r.priority %}</td>
+          <td>{% include "components/badge.html" with tone="ok" text=r.status %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

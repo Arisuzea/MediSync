@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block content %}
+<section class="anim">
+  <h2 class="ptitle">{{ heading }}</h2>
+  <p class="lead">{{ blurb }}</p>
+  <div class="card mt26">
+    {% url "core:dashboard" as home_url %}
+    {% include "components/empty_state.html" with icon="clock" title="Placeholder page" text="This screen is wired into the navigation but its real content is built in "|add:stage|add:"." cta_label="" %}
+    <div class="row g10 wrap" style="justify-content:center">
+      {% include "components/button.html" with label="Back to Dashboard" href=home_url variant="outline" icon="home" %}
+    </div>
+  </div>
+</section>
+{% endblock %}
