@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static ui %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pages/settings.css' %}">{% endblock %}
+{% block content %}
+<section class="anim">
+  <h2 class="ptitle">Settings</h2>
+  <p class="lead">Control how MediSync reaches you and how your queue behaves.</p>
+
+  <div class="grid g2 mt26">
+    <div class="card">
+      <div class="chead"><div><h3>Notifications</h3><p>How we remind you about your turn</p></div><span class="tic nv">{% icon "bell" 18 %}</span></div>
+      <div class="srow"><div class="txt"><p class="b sm">SMS alerts</p><p class="xs muted" style="margin-top:3px">Text when you’re 15 minutes away</p></div>{% include "components/toggle.html" with name="sms_alerts" on=s.sms_alerts label="SMS alerts" %}</div>
+      <div class="srow"><div class="txt"><p class="b sm">Email reminders</p><p class="xs muted" style="margin-top:3px">Summary and calendar invite</p></div>{% include "components/toggle.html" with name="email_reminders" on=s.email_reminders label="Email reminders" %}</div>
+      <div class="srow"><div class="txt"><p class="b sm">Queue sound</p><p class="xs muted" style="margin-top:3px">Play a chime when you’re called</p></div>{% include "components/toggle.html" with name="queue_sound" on=s.queue_sound label="Queue sound" %}</div>
+    </div>
+    <div class="card">
+      <div class="chead"><div><h3>Triage &amp; privacy</h3><p>Defaults for every booking</p></div><span class="tic">{% icon "shield" 18 %}</span></div>
+      <div class="srow"><div class="txt"><p class="b sm">Auto-start triage</p><p class="xs muted" style="margin-top:3px">Jump straight to the questionnaire</p></div>{% include "components/toggle.html" with name="auto_triage" on=s.auto_triage label="Auto-start triage" %}</div>
+      <div class="srow"><div class="txt"><p class="b sm">Share anonymous queue stats</p><p class="xs muted" style="margin-top:3px">Helps the clinic predict wait times</p></div>{% include "components/toggle.html" with name="share_anon_stats" on=s.share_anon_stats label="Share anonymous queue stats" %}</div>
+    </div>
+  </div>
+
+  <div class="card mt20">
+    <div class="chead"><div><h3>Account</h3><p>Session and data controls</p></div></div>
+    <div class="row g10 wrap">
+      {% url "accounts:password_change" as pw_url %}
+      {% url "accounts:export" as export_url %}
+      {% include "components/button.html" with label="Change password" href=pw_url variant="outline" icon="lock" %}
+      {% include "components/button.html" with label="Download my data" href=export_url variant="outline" icon="file" %}
+      <button type="button" class="btn btn--danger" data-modal-open="signout">{% icon "logout" 18 %}<span>Sign out</span></button>
+    </div>
+    <div class="hr"></div>
+    <p class="xs muted">MediSync v1.0 · Prototype build. Triage is queue-priority support only, not a diagnosis.</p>
+  </div>
+</section>
+{% endblock %}

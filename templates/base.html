@@ -21,6 +21,7 @@
   <a class="skip" href="#main">Skip to main content</a>
   <div class="bar" aria-hidden="true"></div>
 
+  {% block shell %}
   <div class="app">
     {% include "partials/sidebar.html" %}
     <div class="pad">
@@ -30,6 +31,8 @@
       </main>
     </div>
   </div>
+  {% include "partials/signout_modal.html" %}
+  {% endblock %}
 
   <div class="scrim" id="scrim" hidden></div>
   {% include "partials/toasts.html" %}

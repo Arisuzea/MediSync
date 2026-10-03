@@ -1,0 +1,9 @@
+{% comment %}
+Usage: {% include "components/form_field.html" with field=form.course %}
+Renders label, widget, help text and errors with the prototype's .lb / .err classes.
+{% endcomment %}<div>
+  <label class="lb" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="req">*</span>{% endif %}</label>
+  {{ field }}
+  {% if field.help_text %}<div class="hint2">{{ field.help_text|safe }}</div>{% endif %}
+  {% for error in field.errors %}<p class="err">{{ error }}</p>{% endfor %}
+</div>

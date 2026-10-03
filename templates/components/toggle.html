@@ -1,0 +1,7 @@
+{% comment %}
+Usage: {% include "components/toggle.html" with name="sms_alerts" on=s.sms_alerts label="SMS alerts" %}
+One switch is one small POST form; the server flips the value (no JS needed).
+{% endcomment %}<form method="post" action="{% url 'accounts:toggle_setting' %}">{% csrf_token %}
+  <input type="hidden" name="setting" value="{{ name }}">
+  <button type="submit" class="tgl{% if on %} on{% endif %}" role="switch" aria-checked="{{ on|yesno:'true,false' }}" aria-label="{{ label }}"></button>
+</form>

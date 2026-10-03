@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block content %}
+<section class="anim">
+  <h2 class="ptitle">Medical profile</h2>
+  <p class="lead">Kept private and shown to the clinician only when you’re called in.</p>
+
+  <form method="post" action="{% url 'accounts:profile' %}" novalidate>
+    {% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="err mt14">{{ error }}</p>{% endfor %}
+    <div class="grid g2 mt26">
+      {# ---- Left column: personal details ---- #}
+      <div class="card">
+        <div class="chead"><div><h3>Personal details</h3><p>Used for clinic identification</p></div></div>
+        <div class="grid" style="gap:14px">
+          {% include "components/form_field.html" with field=form.full_name %}
+          {% include "components/form_field.html" with field=form.student_id %}
+          <div class="grid g2" style="gap:14px">
+            {% include "components/form_field.html" with field=form.course %}
+            {% include "components/form_field.html" with field=form.year_level %}
+          </div>
+          <div class="grid g2" style="gap:14px">
+            {% include "components/form_field.html" with field=form.email %}
+            {% include "components/form_field.html" with field=form.phone %}
+          </div>
+        </div>
+        <div class="mt20 row g10 wrap">
+          {% url "accounts:profile" as profile_url %}
+          {% include "components/button.html" with label="Save changes" type="submit" variant="gold" icon="check" %}
+          {% include "components/button.html" with label="Discard" href=profile_url variant="ghost" icon="refresh" %}
+        </div>
+      </div>
+
+      {# ---- Right column: health, emergency contact, privacy note ---- #}
+      <div>
+        <div class="card">
+          <div class="chead">
+            <div><h3>Health information</h3><p>Critical for safe treatment</p></div>
+            {% if profile.has_allergy %}{% include "components/badge.html" with tone="high" icon="alert" text="Allergy on file" %}{% endif %}
+          </div>
+          <div class="grid" style="gap:14px">
+            <div class="grid g2" style="gap:14px">
+              {% include "components/form_field.html" with field=form.blood_type %}
+              {% include "components/form_field.html" with field=form.allergies %}
+            </div>
+            {% include "components/form_field.html" with field=form.notes %}
+          </div>
+        </div>
+
+        <div class="card mt20">
+          <div class="chead"><div><h3>Emergency contact</h3></div></div>
+          <div class="row g14">
+            {% if profile.has_emergency_contact %}
+              <span class="avatar gd" style="width:44px;height:44px;border-radius:13px">{{ profile.emergency_name|initials }}</span>
+              <div style="flex:1">
+                <p class="b">{{ profile.emergency_name }}</p>
+                <p class="xs muted" style="margin-top:3px">{% if profile.emergency_relationship %}{{ profile.emergency_relationship }} · {% endif %}{{ profile.emergency_phone }}</p>
+              </div>
+              <button type="button" class="btn btn--outline btn--sm" data-modal-open="emergency"><span>Edit</span></button>
+            {% else %}
+              <div style="flex:1">
+                <p class="b">No emergency contact yet</p>
+                <p class="xs muted" style="margin-top:3px">The clinic calls this person if you need urgent help.</p>
+              </div>
+              <button type="button" class="btn btn--outline btn--sm" data-modal-open="emergency"><span>Add</span></button>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card mt20" style="background:#F8FBF9;border-color:#D8EDE4">
+          <div class="row g12">
+            <span class="tic" style="background:var(--okbg);color:var(--ok)">{% icon "lock" 18 %}</span>
+            <div>
+              <p class="b sm">Your data stays on campus</p>
+              <p class="xs muted" style="margin-top:3px">Records are encrypted and only visible to clinic staff treating you.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</section>
+
+{# Emergency contact modal: its own form, kept outside the profile form (forms can't nest) #}
+{% modal id="emergency" icon="user" title="Emergency contact" tone="navy" %}
+  <form method="post" action="{% url 'accounts:emergency_contact' %}" novalidate class="grid mt14" style="gap:14px">
+    {% csrf_token %}
+    {% include "components/form_field.html" with field=emergency_form.emergency_name %}
+    {% include "components/form_field.html" with field=emergency_form.emergency_relationship %}
+    {% include "components/form_field.html" with field=emergency_form.emergency_phone %}
+    <div class="modal__actions" style="margin-top:6px">
+      <button type="button" class="btn btn--outline" data-modal-close><span>Cancel</span></button>
+      <button type="submit" class="btn btn--gold">{% icon "check" 18 %}<span>Save contact</span></button>
+    </div>
+  </form>
+{% endmodal %}
+{% if open_emergency %}<script>document.getElementById("modal-emergency").hidden = false;</script>{% endif %}
+{% endblock %}

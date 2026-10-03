@@ -24,20 +24,33 @@ def _resolve(items, current):
     return resolved
 
 
+def _student(user):
+    p = user.profile
+    return {
+        "name": user.display_name,
+        "first_name": user.first_display_name,
+        "student_id": p.student_id or "",
+        "course": p.course,
+    }
+
+
 def layout(request):
     match = request.resolver_match
     if match and match.namespace:
         current = f"{match.namespace}:{match.url_name}"
     else:
         current = match.url_name if match else ""
-    return {
-        "main_nav": _resolve(MAIN_NAV, current),
-        "support_nav": _resolve(SUPPORT_NAV, current),
-        "page_meta": page_meta(current),
-        # TEMPORARY (Stages 2-8 replace these with real data):
-        "student": mock.STUDENT,
-        "notifications": mock.NOTIFICATIONS,
-        "unread_count": sum(1 for n in mock.NOTIFICATIONS if n["unread"]),
-        "active_appointment": mock.APPOINTMENT,
-        "queue": mock.queue_summary(mock.APPOINTMENT),
-    }
+    ctx = {"page_meta": page_meta(current)}
+    if not request.user.is_authenticated:
+        return ctx
+    ctx.update(
+        main_nav=_resolve(MAIN_NAV, current),
+        support_nav=_resolve(SUPPORT_NAV, current),
+        student=_student(request.user),
+        # TEMPORARY (Stages 3-8 replace these with real data):
+        notifications=mock.NOTIFICATIONS,
+        unread_count=sum(1 for n in mock.NOTIFICATIONS if n["unread"]),
+        active_appointment=mock.APPOINTMENT,
+        queue=mock.queue_summary(mock.APPOINTMENT),
+    )
+    return ctx

@@ -3,7 +3,10 @@
   {% for message in messages %}
     <div class="toast {{ message.tags }}">
       <span class="iw">{% if message.tags == "success" %}{% icon "checkc" 17 %}{% elif message.tags == "error" %}{% icon "alert" 17 %}{% else %}{% icon "info" 17 %}{% endif %}</span>
-      <div><strong>{{ message }}</strong></div>
+      <div>
+        <strong>{{ message|toast_title }}</strong>
+        {% if message|toast_body %}<p>{{ message|toast_body }}</p>{% endif %}
+      </div>
     </div>
   {% endfor %}
 </div>

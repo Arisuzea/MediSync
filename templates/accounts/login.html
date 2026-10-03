@@ -1,0 +1,24 @@
+{% extends "base_auth.html" %}
+{% load ui %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<section class="anim">
+  <div class="card authcard">
+    <div class="authbrand">
+      <span class="bmark" style="background:var(--navy);color:#fff;width:40px;height:40px;border-radius:12px;display:grid;place-items:center">{% icon "shield" 20 %}</span>
+      <strong style="font-size:20px">MediSync</strong>
+    </div>
+    <h2 class="ptitle" style="font-size:26px">Sign in</h2>
+    <p class="lead" style="margin:12px auto 0">Use the account issued by Student Health Services. Your queue position and booking are saved to it.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% for error in form.non_field_errors %}<p class="err form">{{ error }}</p>{% endfor %}
+      {% include "components/form_field.html" with field=form.username %}
+      {% include "components/form_field.html" with field=form.password %}
+      <div class="mt8">{% include "components/button.html" with label="Sign in" type="submit" variant="gold" icon="checkc" block=True %}</div>
+    </form>
+    <p class="xs muted mt20">Triage is queue-priority support only, not a diagnosis.</p>
+  </div>
+</section>
+{% endblock %}

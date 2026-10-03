@@ -18,3 +18,11 @@
 @keyframes sh{from{background-position:100% 0}to{background-position:0 0}}
 .empty{text-align:center;padding:40px 20px}
 .eic{width:64px;height:64px;border-radius:20px;background:#F1F4FA;display:grid;place-items:center;margin:0 auto 16px;color:var(--navy)}
+
+/* Modals: .ov uses display:grid, which would override the hidden attribute */
+.ov[hidden]{display:none}
+.modal__icon--navy{background:#F1F4FA;color:var(--navy)}
+.modal__icon--warn{background:var(--warnbg);color:var(--warn)}
+.modal__icon--bad{background:var(--badbg);color:var(--bad)}
+.modal__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.modal__actions form{margin:0}

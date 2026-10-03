@@ -1,0 +1,5 @@
+.authwrap{min-height:calc(100vh - 6px);display:grid;place-items:center;padding:24px}
+.authcard{width:100%;max-width:440px;padding:40px 32px;text-align:center}
+.authcard form{text-align:left;margin-top:26px;display:grid;gap:16px}
+.authcard .err.form{justify-content:center;margin-top:0}
+.authbrand{display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}

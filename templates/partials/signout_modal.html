@@ -1,0 +1,11 @@
+{% load ui %}{% if user.is_authenticated %}
+{% modal id="signout" icon="logout" title="Sign out of MediSync?" tone="navy" %}
+  <p class="sm muted mt8" style="line-height:1.6">Your booking and any active queue position stay saved to your student account.</p>
+  <div class="modal__actions">
+    <button type="button" class="btn btn--outline" data-modal-close>{% icon "left" 18 %}<span>Stay signed in</span></button>
+    <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+      <button type="submit" class="btn btn--primary">{% icon "logout" 18 %}<span>Sign out</span></button>
+    </form>
+  </div>
+{% endmodal %}
+{% endif %}

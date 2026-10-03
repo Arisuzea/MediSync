@@ -45,3 +45,47 @@ def safe_url(name):
 def priority_tone(level):
     """HIGH/MEDIUM/LOW -> the badge colour suffix used in components.css."""
     return {"HIGH": "high", "MEDIUM": "med", "LOW": "low"}.get(level, "low")
+
+
+@register.filter
+def toast_title(message):
+    return str(message).split("\n", 1)[0]
+
+
+@register.filter
+def toast_body(message):
+    parts = str(message).split("\n", 1)
+    return parts[1] if len(parts) > 1 else ""
+
+
+class ModalNode(template.Node):
+    """{% modal id="signout" icon="logout" title="Sign out?" tone="navy" %}...{% endmodal %}
+
+    The body is arbitrary template content, so each modal can hold its own
+    <form> or buttons. Opened with a [data-modal-open="<id>"] trigger.
+    """
+
+    def __init__(self, nodelist, options):
+        self.nodelist = nodelist
+        self.options = options
+
+    def render(self, context):
+        from django.template.loader import render_to_string
+
+        opts = {k: v.resolve(context) for k, v in self.options.items()}
+        opts["body"] = self.nodelist.render(context)
+        return render_to_string("components/modal.html", opts, request=context.get("request"))
+
+
+@register.tag("modal")
+def do_modal(parser, token):
+    bits = token.split_contents()[1:]
+    options = {}
+    for bit in bits:
+        key, sep, value = bit.partition("=")
+        if not sep:
+            raise template.TemplateSyntaxError("modal options must be key=value")
+        options[key] = parser.compile_filter(value)
+    nodelist = parser.parse(("endmodal",))
+    parser.delete_first_token()
+    return ModalNode(nodelist, options)
