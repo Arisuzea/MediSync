@@ -1,0 +1,3 @@
+USERNAME: Medisync
+EMAIL: medisync@nu-dasma.edu.ph
+PASSWORD: medisyncpassword123@
