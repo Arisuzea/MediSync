@@ -1,0 +1,4 @@
+{% load ui %}{% comment %}
+Usage: {% include "components/badge.html" with tone="ok" icon="check" text="Confirmed" %}
+  tone -> ok | gold | grey | navy | high | med | low
+{% endcomment %}<span class="badge b{{ tone|default:'grey' }}">{% if icon %}{% icon icon 13 %}{% endif %}{{ text }}</span>

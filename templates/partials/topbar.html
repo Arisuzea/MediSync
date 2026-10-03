@@ -1,0 +1,54 @@
+{% load ui %}
+<header class="top">
+  <button type="button" class="ibtn onlym" data-sidebar-toggle aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">{% icon "menu" 19 %}</button>
+
+  <div class="htitle">
+    <h1>{{ page_meta.title }}</h1>
+    <div class="crumb">{{ page_meta.crumb }}</div>
+  </div>
+
+  {# Notifications dropdown #}
+  <div style="position:relative" data-dropdown>
+    <button type="button" class="ibtn" data-dropdown-trigger aria-label="Notifications" aria-expanded="false">
+      {% icon "bell" 19 %}{% if unread_count %}<span class="badge-dot"></span>{% endif %}
+    </button>
+    <div class="dd" style="width:330px" data-dropdown-menu hidden>
+      <div class="ddhead"><strong>Notifications</strong></div>
+      {% for n in notifications %}
+        <div class="notif{% if not n.unread %} read{% endif %}">
+          <span class="ud"></span>
+          <span><strong>{{ n.title }}</strong><p>{{ n.body }}</p><time>{{ n.when }}</time></span>
+        </div>
+      {% empty %}
+        <p class="sm muted" style="padding:14px">You're all caught up.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# User menu dropdown #}
+  <div style="position:relative" data-dropdown>
+    <button type="button" class="avbtn" data-dropdown-trigger aria-expanded="false">
+      <span class="avatar">{{ student.name|initials }}</span>
+      <span style="font-size:13.6px;font-weight:650">{{ student.first_name }}</span>
+      {% icon "cd" 15 %}
+    </button>
+    <div class="dd" style="min-width:230px" data-dropdown-menu hidden>
+      <div class="ddhead">
+        <div>
+          <strong style="font-size:13.8px">{{ student.name }}</strong>
+          <p class="xs muted" style="margin-top:3px">{{ student.student_id }} · {{ student.course }}</p>
+        </div>
+      </div>
+      {% safe_url "accounts:profile" as profile_url %}
+      {% safe_url "accounts:settings" as settings_url %}
+      {% safe_url "appointments:history" as history_url %}
+      {% safe_url "core:help" as help_url %}
+      <a class="mi" href="{{ profile_url }}">{% icon "user" 17 %}Medical Profile</a>
+      <a class="mi" href="{{ settings_url }}">{% icon "settings" 17 %}Settings</a>
+      <a class="mi" href="{{ history_url }}">{% icon "history" 17 %}Visit History</a>
+      <a class="mi" href="{{ help_url }}">{% icon "help" 17 %}Help &amp; Support</a>
+      <div class="msep"></div>
+      <span class="mi dgr" title="Real sign-out arrives in Stage 2">{% icon "logout" 17 %}Sign out</span>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,8 @@
+{% load ui %}{% comment %}
+Usage: {% include "components/empty_state.html" with icon="calplus" title="No upcoming visit" text="..." cta_label="Book Appointment" cta_href=book_url %}
+{% endcomment %}<div class="empty">
+  <div class="eic">{% icon icon|default:"inbox" 26 %}</div>
+  <p class="b">{{ title }}</p>
+  {% if text %}<p class="sm muted mt8">{{ text }}</p>{% endif %}
+  {% if cta_label %}<div class="mt14">{% include "components/button.html" with label=cta_label href=cta_href variant="gold" icon="calplus" %}</div>{% endif %}
+</div>

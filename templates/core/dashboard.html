@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static ui %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/pages/dashboard.css' %}">{% endblock %}
+
+{% block content %}
+<section class="anim">
+
+  {# ---- Welcome banner ---- #}
+  <div class="banner">
+    <div>
+      <p class="eb on">{% icon "shield" 14 %} Student Health Services</p>
+      <h2>Welcome back, {{ student.first_name }}</h2>
+      <p class="bsub2">
+        {% if appointment %}
+          Your {{ appointment.reason|lower }} with {{ appointment.practitioner }} is confirmed for {{ appointment.date|date:"D, M j, Y" }} at {{ appointment.time|time:"g:i A" }}. We’ll text you when your turn is close.
+        {% else %}
+          You have no upcoming appointment. Booking takes under a minute — pick a practitioner and we’ll handle the queue.
+        {% endif %}
+      </p>
+      <div class="row g10 wrap mt20">
+        {% include "components/button.html" with label="Book Appointment" href=book_url variant="gold" icon="calplus" %}
+        {% include "components/button.html" with label="View Queue" href=queue_url variant="outline" icon="list" %}
+      </div>
+    </div>
+    <div class="bart">
+      <div class="ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" stroke="rgba(255,255,255,.14)" stroke-width="8" fill="none"/>
+          <circle class="rp" cx="60" cy="60" r="52" stroke="#C9A227" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="327" stroke-dashoffset="327" transform="rotate(-90 60 60)"/>
+        </svg>
+        <div class="rt">
+          {% if appointment %}
+            <span class="rn">#{{ appointment.queue_number }}</span><span class="rl">Your queue</span>
+          {% else %}
+            <span class="rn">{% icon "spark" 30 %}</span><span class="rl">No queue yet</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ---- Next appointment + live queue ---- #}
+  <div class="split mt26">
+    <div class="card">
+      <div class="chead">
+        <div>
+          <h3>Next appointment</h3>
+          <p>{% if appointment %}Confirmed and locked in{% else %}Nothing scheduled yet{% endif %}</p>
+        </div>
+        {% if appointment %}
+          {% include "components/badge.html" with tone="ok" icon="check" text="Confirmed" %}
+        {% else %}
+          {% include "components/badge.html" with tone="grey" text="None" %}
+        {% endif %}
+      </div>
+
+      {% if appointment %}
+        <div class="row g14 wrap">
+          <span class="avatar gd" style="width:54px;height:54px;font-size:16px">{{ appointment.practitioner|initials }}</span>
+          <div style="flex:1;min-width:170px">
+            <strong style="font-size:16.5px">{{ appointment.practitioner }}</strong>
+            <p class="sm muted" style="margin-top:3px">{{ appointment.role }}</p>
+          </div>
+          <div class="row g8 wrap">
+            <span class="chip">{% icon "calcheck" 14 %} {{ appointment.date|date:"D, M j, Y" }}</span>
+            <span class="chip">{% icon "clock" 14 %} {{ appointment.time|time:"g:i A" }}</span>
+            <span class="chip">{% icon "list" 14 %} Queue #{{ appointment.queue_number }}</span>
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="row g10 wrap">
+          {% include "components/button.html" with label="View Queue" href=queue_url icon="list" %}
+          {% include "components/button.html" with label="Booking details" href=confirmation_url variant="outline" icon="file" %}
+          {% include "components/button.html" with label="Reschedule" href=schedule_url variant="ghost" icon="calplus" %}
+        </div>
+      {% else %}
+        {% include "components/empty_state.html" with icon="calplus" title="No upcoming visit" text="Book with a doctor or dentist and you’ll get a queue number instantly." cta_label="Book Appointment" cta_href=book_url %}
+      {% endif %}
+    </div>
+
+    <div class="card" style="background:radial-gradient(120% 140% at 100% 0%,#1D3E71,#0B1F3A 60%,#071426);color:#fff;border-color:transparent">
+      <div class="row between">
+        <p class="eb on">{% icon "act" 14 %} Live queue</p>
+        <span class="badge bgold">{% icon "refresh" 12 %} real-time</span>
+      </div>
+      <p class="qlbl mt20">Now serving</p>
+      <p style="font-size:46px;font-weight:800;line-height:1.05">{% if appointment %}#{{ queue.serving }}–{{ appointment.queue_number }}{% else %}—{% endif %}</p>
+      <p class="sm" style="color:#B9C8E0;margin-top:10px">
+        {% icon "users" 14 %}
+        {% if appointment %}
+          {% if queue.ahead > 0 %}{{ queue.ahead }} students ahead · est. {{ queue.wait }}{% else %}You are next in line{% endif %}
+        {% else %}
+          Clinic is empty right now
+        {% endif %}
+      </p>
+      <div class="tline"><span class="td dn"></span><span class="td dn"></span><span class="td{% if appointment %} you{% endif %}"></span><span class="td"></span><span class="td"></span></div>
+      <div class="mt20">
+        {% if appointment %}
+          {% include "components/button.html" with label="Open queue" href=queue_url variant="gold" icon="list" block=True %}
+        {% else %}
+          {% include "components/button.html" with label="Book a visit" href=book_url variant="gold" icon="calplus" block=True %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ---- Quick-action tiles ---- #}
+  <div class="grid g4 mt26">
+    {% for t in tiles %}
+      <a class="tile lift" href="{{ t.href }}">
+        <span class="tic {{ t.tone }}">{% icon t.icon 20 %}</span>
+        <strong>{{ t.label }}</strong>
+        <span class="hint">{{ t.hint }}</span>
+        <span class="eb" style="color:var(--gold)">Open {% icon "right" 13 %}</span>
+      </a>
+    {% endfor %}
+  </div>
+
+  {# ---- Before your visit + recent activity ---- #}
+  <div class="split mt26">
+    <div class="card">
+      <div class="chead">
+        <div><h3>Before your visit</h3><p>Three checks that keep the queue moving</p></div>
+        <span class="tic">{% icon "shield" 18 %}</span>
+      </div>
+      <ul style="margin:0;padding-left:18px;line-height:1.9;font-size:14.2px;color:#33415C">
+        <li>Arrive <strong>15 minutes early</strong> and tap the kiosk to confirm your queue number.</li>
+        <li>Bring your <strong>student ID</strong> — required at check-in.</li>
+        <li>Queue priority is support only and <strong>is not a diagnosis</strong>.</li>
+      </ul>
+      <div class="mt20 row g10 wrap">
+        {% include "components/button.html" with label="Add to calendar" variant="outline" icon="calplus" size="sm" %}
+        {% include "components/button.html" with label="Contact clinic" href=help_url variant="ghost" icon="help" size="sm" %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chead"><div><h3>Recent activity</h3><p>Your last clinic touchpoints</p></div></div>
+      {% for h in recent %}
+        <div class="row g14" style="padding:11px 0;border-bottom:1px solid #F1F3F8">
+          <span class="tic nv" style="width:36px;height:36px;border-radius:11px">{% if h.status == "Cancelled" %}{% icon "x" 17 %}{% else %}{% icon "checkc" 17 %}{% endif %}</span>
+          <div style="flex:1">
+            <p class="b" style="font-size:13.8px">{{ h.reason }}</p>
+            <p class="xs muted" style="margin-top:2px">{{ h.practitioner }} · {{ h.date|date:"M j" }}</p>
+          </div>
+          {% include "components/badge.html" with tone=h.priority|priority_tone text=h.priority %}
+        </div>
+      {% endfor %}
+      <div class="mt14">
+        {% include "components/button.html" with label="View full history" href=history_url variant="outline" icon="history" block=True %}
+      </div>
+    </div>
+  </div>
+
+</section>
+{% endblock %}

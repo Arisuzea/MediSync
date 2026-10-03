@@ -1,0 +1,7 @@
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.02em}p{margin:0}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px}
+.skip{position:absolute;left:-9999px;top:8px;z-index:300;background:#fff;padding:10px 14px;border-radius:10px;box-shadow:var(--sh)}
+.skip:focus{left:12px}

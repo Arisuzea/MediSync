@@ -1,0 +1,9 @@
+{% load ui %}{% comment %}
+Usage: {% include "components/button.html" with label="Save" variant="gold" icon="check" %}
+  href     -> renders an <a>; otherwise a <button type="button"> (or type="submit" via type=)
+  variant  -> primary (default) | gold | outline | ghost | danger
+  size     -> sm | lg (optional)
+  block    -> True for full width
+  icon     -> name from apps/core/icons.py
+  disabled -> True to disable
+{% endcomment %}{% if href %}<a href="{{ href }}" class="btn btn--{{ variant|default:'primary' }}{% if size %} btn--{{ size }}{% endif %}{% if block %} btn--block{% endif %}">{% else %}<button type="{{ type|default:'button' }}" class="btn btn--{{ variant|default:'primary' }}{% if size %} btn--{{ size }}{% endif %}{% if block %} btn--block{% endif %}"{% if disabled %} disabled aria-disabled="true"{% endif %}>{% endif %}{% if icon %}{% if size == "sm" %}{% icon icon 16 %}{% else %}{% icon icon 18 %}{% endif %}{% endif %}{% if label %}<span>{{ label }}</span>{% endif %}{% if href %}</a>{% else %}</button>{% endif %}
