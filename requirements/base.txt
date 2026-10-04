@@ -1,5 +1,2 @@
 Django>=5.2,<5.3
 django-environ>=0.11
-
-"django.contrib.messages.context_processors.messages",
-"apps.core.context_processors.layout"
