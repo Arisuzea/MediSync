@@ -44,6 +44,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.middleware.ConsentRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -96,3 +97,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "core:dashboard"
 LOGOUT_REDIRECT_URL = "accounts:login"
+
+# Idle logout (NFR-05). The session expires this long after the last request.
+SESSION_IDLE_MINUTES = env.int("SESSION_IDLE_MINUTES", default=15)
+SESSION_COOKIE_AGE = SESSION_IDLE_MINUTES * 60
+SESSION_SAVE_EVERY_REQUEST = True

@@ -13,7 +13,7 @@ input[type=range]{width:100%;accent-color:var(--gold);height:26px;border:none;pa
 .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}
 .chk{display:flex;align-items:center;gap:11px;border:1.5px solid #DCE2EE;border-radius:12px;padding:11px 13px;cursor:pointer;background:#fff;transition:.16s;font-size:14px;font-weight:600}
 .chk:hover{border-color:#C6D1E4;background:#FAFBFF}
-.chk input{width:18px;height:18px;accent-color:var(--navy);cursor:pointer}
+.chk input{width:18px;height:18px;padding:0;flex:none;accent-color:var(--navy);cursor:pointer}
 .chk.on{border-color:var(--navy);background:#F6F8FD}
 .svrow{display:flex;align-items:center;gap:12px}
 .svval{font-size:22px;font-weight:800;min-width:44px;text-align:center}

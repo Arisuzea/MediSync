@@ -1,3 +1,13 @@
 USERNAME: Medisync
 EMAIL: medisync@nu-dasma.edu.ph
 PASSWORD: medisyncpassword123@
+
+MediSync Test Accounts
+
+USERNAME         PASSWORD
+alex.mendoza     medisync-demo   (student)
+nurse.demo       medisync-demo   (nurse)
+doctor.demo      medisync-demo   (doctor)
+dentist.demo     medisync-demo   (dentist)
+volunteer.demo   medisync-demo   (volunteer)
+admin.demo       medisync-demo   (system administrator)

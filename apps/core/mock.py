@@ -1,7 +1,7 @@
 """TEMPORARY prototype data so the layout shell has something to show.
 
 Everything here is replaced by real models in later stages:
-    STUDENT       -> accounts.StudentProfile   (Stage 2)
+    STUDENT       -> accounts.Patient   (Stage 2)
     NOTIFICATIONS -> notifications.Notification (Stage 8)
     APPOINTMENT   -> appointments.Appointment   (Stage 6)
     RECENT        -> Appointment history query  (Stage 8)

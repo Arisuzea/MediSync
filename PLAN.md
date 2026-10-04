@@ -1,6 +1,6 @@
 # MediSync Development Plan
 
-Revised to match the Software Engineering 1 paper. Status as of October 4, 2026.
+Revised to match the Software Engineering 1 paper. Status as of October 4, 2026 (Stage 3 done).
 
 This file replaces the earlier student-side-only plan. Keep it in `docs/PLAN.md`. The companion PDF carries the same content.
 
@@ -16,8 +16,8 @@ This plan replaces the earlier plan, which covered the student side only. It map
 | 1 | Layout shell, shared templates, icons, dashboard | Done |
 | 2 | Student accounts: login, profile, settings, password change, data export | Done |
 | 2P | Placeholder pages so every tab opens (temporary) | Done |
-| 3 | Foundation: roles, patients, consent, activity log, session timeout | Next |
-| 4 | Clinic data, admin, seed data, slot generator | Not started |
+| 3 | Foundation: roles, patients, consent, activity log, session timeout | Done |
+| 4 | Clinic data, admin, seed data, slot generator | Next |
 | 5 | Booking steps 1 to 3 | Not started |
 | 6 | Questionnaire and triage suggestion | Not started |
 | 7 | Confirmation, queue entry, notifications, cancellation | Not started |
@@ -109,7 +109,7 @@ Rule: **clinic describes what exists. appointments describes what a patient book
 | App | Owns | Status |
 |---|---|---|
 | core | Layout, dashboard, help and FAQ, error pages, template tags, icons, toast helper | Exists |
-| accounts | User with role, Patient, UserSettings, ActivityLog, VolunteerAgreement, login, consent, session timeout | Exists, grows in Stage 3 |
+| accounts | User with role, Patient, UserSettings, ActivityLog, VolunteerAgreement, login, consent, session timeout | Exists (Stage 3 done) |
 | clinic | Practitioner, PractitionerAvailability, VisitReason, Symptom, ClosedDate, slot generator | Stage 4 |
 | appointments | Booking flow, Appointment, TriageAssessment, QueueEntry, triage service, queue state | Stages 5 to 8 |
 | notifications | Notification, Message, delivery service for in-app, email and SMS | Stages 7 and 11 |
@@ -200,7 +200,7 @@ Every stage must also pass the checklist in section 6.
 
 ### Stage 3: Foundation: roles, patients, consent, activity log, session timeout
 
-**Status:** Next
+**Status:** Done
 
 **Goal.** Put role-based access, one shared patient identity, consent and an audit trail in place before any staff feature exists. Every later stage depends on them. Covers FR-01, FR-12, FR-13, NFR-02, NFR-05, NFR-09.
 
@@ -230,6 +230,20 @@ Every stage must also pass the checklist in section 6.
 **Notes**
 
 - Minors are identified from `birth_date`. The age threshold and the guardian rule need clinic confirmation (open items).
+
+**As built**
+
+- `apps/accounts/permissions.py`: `RoleRequiredMixin` (set `allowed_roles`, default student and employee) and `@role_required(*roles)`. Anonymous users go to login, a wrong role gets 403. All existing views use them.
+- `Patient` exists only for students, employees and visitors. Staff accounts do not get one, so `user.profile` raises for staff. Anything that reads `profile` must be behind a patient-role check. Visitors have no user, so `Patient.full_name` holds their name and a database check requires a user or a name.
+- Consent: `ConsentRequiredMiddleware` (uses `process_view`) sends patients without consent to `/consent/`. Only the terms page and logout are exempt. The terms text is draft wording and needs clinic and university approval before real use.
+- `ActivityLog` is append-only (also in admin). `log_activity(user, action, module, object_id, detail)` in `apps/accounts/activity.py`. Logged now: login, failed login (username only, never the password), logout, consent, role change in admin. Later stages add record views and edits.
+- Idle timeout is `SESSION_IDLE_MINUTES` (default 15) with `SESSION_SAVE_EVERY_REQUEST`. **Stage 8 must handle this:** any polling request (queue board, `/queue/status/`) refreshes the session, so a page that polls every 10 seconds never times out. Exempt the polling endpoints when building them, for example with a small middleware that tracks last real activity.
+- Admin: `/admin/` opens only for superusers and the admin role. The admin role is added automatically to the "System Administrator" group, which can manage users, view the activity log and manage volunteer agreements, and is shown no patient health fields. A superuser still sees everything.
+- Staff accounts land on a temporary `/staff/` page until the Stage 8 portal replaces it. Staff cannot use the student password change page until then (admin can reset passwords).
+- `createsuperuser` and the migration give superusers the admin role.
+- The profile form is unchanged. `birth_date`, `sex`, `address` and guardian fields exist on the model but are filled in by staff (Stage 8 and 9), not by students.
+- `seed_demo` adds `nurse.demo`, `doctor.demo`, `dentist.demo`, `volunteer.demo`, `admin.demo` (password `medisync-demo`) and the visitor "Jordan Visitor".
+- 56 tests pass (35 new), including the rename migration test with real rows.
 
 ### Stage 4: Clinic data, admin, seed data, slot generator
 

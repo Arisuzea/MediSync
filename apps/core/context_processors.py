@@ -1,5 +1,6 @@
 """Template context available on every page (sidebar, topbar)."""
 
+from django.conf import settings
 from django.urls import NoReverseMatch, reverse
 
 from . import mock
@@ -40,9 +41,9 @@ def layout(request):
         current = f"{match.namespace}:{match.url_name}"
     else:
         current = match.url_name if match else ""
-    ctx = {"page_meta": page_meta(current)}
-    if not request.user.is_authenticated:
-        return ctx
+    ctx = {"page_meta": page_meta(current), "idle_minutes": settings.SESSION_IDLE_MINUTES}
+    if not (request.user.is_authenticated and request.user.is_patient_role):
+        return ctx  # staff pages (Stage 8) bring their own shell
     ctx.update(
         main_nav=_resolve(MAIN_NAV, current),
         support_nav=_resolve(SUPPORT_NAV, current),

@@ -1,18 +1,20 @@
 import json
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.decorators.http import require_POST
 
 from apps.core.messaging import toast
 
+from . import activity
 from .forms import EmergencyContactForm, LoginForm, ProfileForm
-from .models import UserSettings
+from .models import PATIENT_ROLES, UserSettings
+from .permissions import RoleRequiredMixin, role_required
 
 SETTING_LABELS = {
     "sms_alerts": "SMS alerts",
@@ -41,7 +43,7 @@ class StudentLogoutView(LogoutView):
         return response
 
 
-class ProfileView(LoginRequiredMixin, View):
+class ProfileView(RoleRequiredMixin, View):
     template_name = "accounts/profile.html"
 
     def _context(self, request, form, emergency_form=None, open_emergency=False):
@@ -66,7 +68,7 @@ class ProfileView(LoginRequiredMixin, View):
         return render(request, self.template_name, self._context(request, form))
 
 
-class EmergencyContactView(LoginRequiredMixin, View):
+class EmergencyContactView(RoleRequiredMixin, View):
     http_method_names = ["post"]
 
     def post(self, request):
@@ -85,16 +87,15 @@ class EmergencyContactView(LoginRequiredMixin, View):
         return render(request, ProfileView.template_name, ctx, status=400)
 
 
-class SettingsView(LoginRequiredMixin, View):
+class SettingsView(RoleRequiredMixin, View):
     def get(self, request):
         return render(request, "accounts/settings.html", {"s": request.user.settings})
 
 
 @require_POST
+@role_required(*PATIENT_ROLES)
 def toggle_setting(request):
     """One switch = one tiny form. Server flips the boolean; no JS required."""
-    if not request.user.is_authenticated:
-        return redirect(f"{reverse_lazy('accounts:login')}?next={reverse_lazy('accounts:settings')}")
     key = request.POST.get("setting")
     if key not in UserSettings.TOGGLE_FIELDS:
         toast(request, "error", "Unknown setting")
@@ -107,7 +108,7 @@ def toggle_setting(request):
     return redirect("accounts:settings")
 
 
-class StudentPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
+class StudentPasswordChangeView(RoleRequiredMixin, PasswordChangeView):
     template_name = "accounts/password_change.html"
     success_url = reverse_lazy("accounts:settings")
 
@@ -117,18 +118,22 @@ class StudentPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
         return response
 
 
+@role_required(*PATIENT_ROLES)
 def export_data(request):
     """'Download my data': the student's own profile and settings as JSON.
 
     Later stages add appointments and notifications to this payload.
     """
-    if not request.user.is_authenticated:
-        return redirect(f"{reverse_lazy('accounts:login')}?next={reverse_lazy('accounts:export')}")
     u, p, s = request.user, request.user.profile, request.user.settings
     payload = {
         "exported_at": timezone.localtime().isoformat(timespec="seconds"),
         "account": {"username": u.username, "name": u.get_full_name(), "email": u.email},
         "profile": {
+            "patient_type": p.patient_type, "birth_date": p.birth_date and p.birth_date.isoformat(),
+            "sex": p.sex, "address": p.address,
+            "guardian_name": p.guardian_name, "guardian_phone": p.guardian_phone,
+            "consent_agreed": p.consent_agreed,
+            "consent_date": p.consent_date and p.consent_date.isoformat(timespec="seconds"),
             "student_id": p.student_id, "course": p.course, "year_level": p.year_level,
             "phone": p.phone, "blood_type": p.blood_type, "allergies": p.allergies,
             "notes": p.notes,
@@ -142,3 +147,31 @@ def export_data(request):
     resp = HttpResponse(json.dumps(payload, indent=2), content_type="application/json")
     resp["Content-Disposition"] = 'attachment; filename="medisync-my-data.json"'
     return resp
+
+
+class ConsentView(RoleRequiredMixin, View):
+    """Terms and data-privacy consent. The middleware sends patients here until they agree."""
+
+    template_name = "accounts/consent.html"
+
+    def _next(self, request):
+        target = request.POST.get("next") or request.GET.get("next") or ""
+        ok = url_has_allowed_host_and_scheme(target, {request.get_host()}, request.is_secure())
+        return target if ok else reverse_lazy("core:dashboard")
+
+    def get(self, request):
+        if request.user.profile.consent_agreed:
+            return redirect(self._next(request))
+        return render(request, self.template_name, {"next": self._next(request)})
+
+    def post(self, request):
+        if not request.POST.get("agree"):
+            ctx = {"next": self._next(request), "error": "Tick the box to agree before you continue."}
+            return render(request, self.template_name, ctx)
+        patient = request.user.profile
+        patient.consent_agreed = True
+        patient.consent_date = timezone.now()
+        patient.save(update_fields=["consent_agreed", "consent_date"])
+        activity.log_activity(request.user, activity.CONSENT, "accounts", patient.pk)
+        toast(request, "success", "Thank you", "Your consent is recorded.")
+        return redirect(self._next(request))

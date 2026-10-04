@@ -4,13 +4,13 @@ Each view shows prototype demo data from apps/core/mock.py. Stages 4-8 replace
 them one by one with real views backed by Appointment, queue and history queries.
 """
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 
+from apps.accounts.permissions import RoleRequiredMixin
 from apps.core import mock
 
 
-class PlaceholderView(LoginRequiredMixin, TemplateView):
+class PlaceholderView(RoleRequiredMixin, TemplateView):
     template_name = "appointments/coming_soon.html"
     heading = ""
     blurb = ""
@@ -58,7 +58,7 @@ class ConfirmationView(PlaceholderView):
     stage = "Stage 6"
 
 
-class QueueView(LoginRequiredMixin, TemplateView):
+class QueueView(RoleRequiredMixin, TemplateView):
     template_name = "appointments/queue.html"
 
     def get_context_data(self, **kwargs):
@@ -68,7 +68,7 @@ class QueueView(LoginRequiredMixin, TemplateView):
         return ctx
 
 
-class HistoryView(LoginRequiredMixin, TemplateView):
+class HistoryView(RoleRequiredMixin, TemplateView):
     template_name = "appointments/history.html"
 
     def get_context_data(self, **kwargs):

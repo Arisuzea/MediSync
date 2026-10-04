@@ -18,7 +18,8 @@
       {% include "components/form_field.html" with field=form.password %}
       <div class="mt8">{% include "components/button.html" with label="Sign in" type="submit" variant="gold" icon="checkc" block=True %}</div>
     </form>
-    <p class="xs muted mt20">Triage is queue-priority support only, not a diagnosis.</p>
+    <p class="xs muted mt20">For your security you are signed out after {{ idle_minutes }} minutes of inactivity.</p>
+    <p class="xs muted mt8">Triage is queue-priority support only, not a diagnosis.</p>
   </div>
 </section>
 {% endblock %}

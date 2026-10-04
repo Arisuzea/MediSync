@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 
-from .models import BLOOD_TYPES, StudentProfile
+from .models import BLOOD_TYPES, Patient
 
 User = get_user_model()
 
@@ -24,13 +24,13 @@ class LoginForm(AuthenticationForm):
 
 
 class ProfileForm(forms.ModelForm):
-    """Personal + health details. Name and email live on User, the rest on StudentProfile."""
+    """Personal + health details. Name and email live on User, the rest on Patient."""
 
     full_name = forms.CharField(label="Full name", max_length=300)
     email = forms.EmailField(label="Email", required=False)
 
     class Meta:
-        model = StudentProfile
+        model = Patient
         fields = [
             "student_id", "course", "year_level", "phone",
             "blood_type", "allergies", "notes",
@@ -79,7 +79,7 @@ class ProfileForm(forms.ModelForm):
 
 class EmergencyContactForm(forms.ModelForm):
     class Meta:
-        model = StudentProfile
+        model = Patient
         fields = ["emergency_name", "emergency_relationship", "emergency_phone"]
         labels = {
             "emergency_name": "Contact name",

@@ -1,12 +1,20 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
 from django.views.generic import TemplateView
+
+from apps.accounts.models import STAFF_ROLES
+from apps.accounts.permissions import RoleRequiredMixin
 
 from . import mock
 from .utils import safe_reverse
 
 
-class DashboardView(LoginRequiredMixin, TemplateView):
+class DashboardView(RoleRequiredMixin, TemplateView):
     template_name = "core/dashboard.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_patient_role:
+            return redirect("core:staff_home")  # where login lands for staff accounts
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -40,7 +48,7 @@ FAQS = [
 ]
 
 
-class HelpView(LoginRequiredMixin, TemplateView):
+class HelpView(RoleRequiredMixin, TemplateView):
     template_name = "core/help.html"
 
     def get_context_data(self, **kwargs):
@@ -48,3 +56,10 @@ class HelpView(LoginRequiredMixin, TemplateView):
         ctx["faqs"] = FAQS  # TEMPORARY: becomes the FAQ model in Stage 8
         ctx["queue_url"] = safe_reverse("appointments:queue")
         return ctx
+
+
+class StaffHomeView(RoleRequiredMixin, TemplateView):
+    """TEMPORARY landing for staff accounts until the Stage 8 portal replaces it."""
+
+    template_name = "core/staff_home.html"
+    allowed_roles = STAFF_ROLES

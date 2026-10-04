@@ -1,8 +1,15 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.urls import reverse
+from datetime import timedelta
 
-from .models import StudentProfile, UserSettings
+from django.contrib.auth import get_user_model
+from django.contrib.sessions.models import Session
+from django.db import IntegrityError, connection, transaction
+from django.db.migrations.executor import MigrationExecutor
+from django.test import TestCase, TransactionTestCase
+from django.urls import reverse
+from django.utils import timezone
+
+from . import activity
+from .models import ActivityLog, Patient, Role, UserSettings, VolunteerAgreement
 
 User = get_user_model()
 
@@ -10,14 +17,19 @@ User = get_user_model()
 def make_student(username="sam", student_id="2024-00001", password="pw-12345-xyz"):
     user = User.objects.create_user(username, password=password, first_name="Sam", last_name="Cruz")
     user.profile.student_id = student_id
+    user.profile.consent_agreed = True  # most tests are not about the consent gate
     user.profile.save()
     return user
+
+
+def make_user(role, username=None):
+    return User.objects.create_user(username or role, password="pw-12345-xyz", role=role)
 
 
 class SignalTests(TestCase):
     def test_new_user_gets_profile_and_settings(self):
         u = User.objects.create_user("new", password="x")
-        self.assertTrue(StudentProfile.objects.filter(user=u).exists())
+        self.assertTrue(Patient.objects.filter(user=u).exists())
         self.assertTrue(UserSettings.objects.filter(user=u).exists())
 
     def test_settings_defaults_match_prototype(self):
@@ -182,3 +194,260 @@ class ShellTests(TestCase):
         self.assertIn("2024-00001 · BS Nursing", html)
         self.assertIn(reverse("accounts:profile"), html)
         self.assertIn("modal-signout", html)
+
+
+PATIENT_URLS = ["core:dashboard", "core:help", "appointments:book", "appointments:practitioner",
+                "appointments:schedule", "appointments:symptoms", "appointments:result",
+                "appointments:confirmation", "appointments:queue", "appointments:history",
+                "accounts:profile", "accounts:settings", "accounts:export", "accounts:password_change"]
+
+
+class RoleTests(TestCase):
+    def test_new_users_default_to_student(self):
+        self.assertEqual(User.objects.create_user("x").role, Role.STUDENT)
+
+    def test_create_superuser_is_admin_role(self):
+        su = User.objects.create_superuser("root", password="x")
+        self.assertEqual(su.role, Role.ADMIN)
+
+    def test_admin_role_is_staff(self):
+        self.assertTrue(make_user(Role.ADMIN).is_staff)
+
+    def test_staff_get_no_patient_record_but_patients_do(self):
+        self.assertFalse(Patient.objects.filter(user=make_user(Role.NURSE)).exists())
+        emp = make_user(Role.EMPLOYEE)
+        self.assertEqual(emp.profile.patient_type, "employee")
+
+    def test_changing_role_updates_patient_type(self):
+        u = make_student()
+        u.role = Role.EMPLOYEE
+        u.save()
+        u.profile.refresh_from_db()
+        self.assertEqual(u.profile.patient_type, "employee")
+
+    def test_patient_roles_open_every_patient_page(self):
+        for role in (Role.STUDENT, Role.EMPLOYEE):
+            u = make_user(role)
+            u.profile.consent_agreed = True
+            u.profile.save()
+            self.client.force_login(u)
+            for name in PATIENT_URLS:
+                self.assertEqual(self.client.get(reverse(name)).status_code, 200, f"{role} {name}")
+
+    def test_staff_roles_cannot_open_patient_pages(self):
+        for role in (Role.NURSE, Role.DOCTOR, Role.DENTIST, Role.VOLUNTEER, Role.ADMIN):
+            self.client.force_login(make_user(role))
+            for name in PATIENT_URLS:
+                resp = self.client.get(reverse(name))
+                if name == "core:dashboard":  # login lands here, then moves on to the staff page
+                    self.assertRedirects(resp, reverse("core:staff_home"), fetch_redirect_response=False)
+                else:
+                    self.assertEqual(resp.status_code, 403, f"{role} {name}")
+
+    def test_staff_toggle_is_forbidden(self):
+        self.client.force_login(make_user(Role.NURSE))
+        resp = self.client.post(reverse("accounts:toggle_setting"), {"setting": "sms_alerts"})
+        self.assertEqual(resp.status_code, 403)
+
+    def test_staff_home_only_for_staff(self):
+        self.client.force_login(make_user(Role.DOCTOR))
+        self.assertEqual(self.client.get(reverse("core:staff_home")).status_code, 200)
+        self.client.force_login(make_student())
+        self.assertEqual(self.client.get(reverse("core:staff_home")).status_code, 403)
+
+    def test_anonymous_goes_to_login(self):
+        resp = self.client.get(reverse("core:staff_home"))
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn(reverse("accounts:login"), resp["Location"])
+
+
+class ConsentTests(TestCase):
+    def setUp(self):
+        self.user = make_student()
+        self.user.profile.consent_agreed = False
+        self.user.profile.save()
+        self.client.force_login(self.user)
+        self.url = reverse("accounts:consent")
+
+    def test_patient_without_consent_is_sent_to_terms(self):
+        for name in ("core:dashboard", "accounts:profile", "appointments:book", "accounts:export"):
+            resp = self.client.get(reverse(name))
+            self.assertEqual(resp.status_code, 302, name)
+            self.assertTrue(resp["Location"].startswith(self.url), name)
+
+    def test_post_requests_are_gated_too(self):
+        resp = self.client.post(reverse("accounts:toggle_setting"), {"setting": "sms_alerts"})
+        self.assertTrue(resp["Location"].startswith(self.url))
+
+    def test_terms_page_and_logout_stay_reachable(self):
+        self.assertContains(self.client.get(self.url), "Terms and data privacy consent")
+        resp = self.client.post(reverse("accounts:logout"))
+        self.assertRedirects(resp, reverse("accounts:login"), fetch_redirect_response=False)
+
+    def test_must_tick_the_box(self):
+        resp = self.client.post(self.url, {})
+        self.assertContains(resp, "Tick the box")
+        self.user.profile.refresh_from_db()
+        self.assertFalse(self.user.profile.consent_agreed)
+
+    def test_agreeing_records_consent_and_logs_it(self):
+        resp = self.client.post(self.url, {"agree": "1", "next": reverse("accounts:profile")})
+        self.assertRedirects(resp, reverse("accounts:profile"), fetch_redirect_response=False)
+        self.user.profile.refresh_from_db()
+        self.assertTrue(self.user.profile.consent_agreed)
+        self.assertIsNotNone(self.user.profile.consent_date)
+        self.assertTrue(ActivityLog.objects.filter(user=self.user, action=activity.CONSENT).exists())
+        self.assertEqual(self.client.get(reverse("accounts:profile")).status_code, 200)
+
+    def test_next_cannot_leave_the_site(self):
+        resp = self.client.post(self.url, {"agree": "1", "next": "https://evil.example/"})
+        self.assertRedirects(resp, reverse("core:dashboard"), fetch_redirect_response=False)
+
+    def test_already_consented_skips_terms(self):
+        self.client.post(self.url, {"agree": "1"})
+        self.assertEqual(self.client.get(self.url).status_code, 302)
+
+    def test_staff_are_not_gated(self):
+        self.client.force_login(make_user(Role.NURSE))
+        self.assertEqual(self.client.get(reverse("core:staff_home")).status_code, 200)
+
+    def test_staff_cannot_open_terms(self):
+        self.client.force_login(make_user(Role.NURSE))
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+
+class SessionTimeoutTests(TestCase):
+    def test_idle_length_comes_from_settings(self):
+        from django.conf import settings
+        self.assertEqual(settings.SESSION_COOKIE_AGE, settings.SESSION_IDLE_MINUTES * 60)
+        self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)  # expiry restarts on each request
+
+    def test_expiry_refreshes_on_each_request(self):
+        user = make_student()
+        self.client.force_login(user)
+        session = Session.objects.get()
+        session.expire_date = timezone.now() + timedelta(seconds=30)
+        session.save()
+        self.client.get(reverse("core:dashboard"))
+        self.assertGreater(Session.objects.get().expire_date, timezone.now() + timedelta(minutes=10))
+
+    def test_expired_session_is_signed_out(self):
+        self.client.force_login(make_student())
+        Session.objects.update(expire_date=timezone.now() - timedelta(seconds=1))
+        resp = self.client.get(reverse("core:dashboard"))
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn(reverse("accounts:login"), resp["Location"])
+
+    def test_login_page_explains_inactivity_logout(self):
+        self.assertContains(self.client.get(reverse("accounts:login")), "signed out after 15 minutes of inactivity")
+
+
+class ActivityLogTests(TestCase):
+    def test_login_failed_login_and_logout_are_logged(self):
+        user = make_student()
+        self.client.post(reverse("accounts:login"), {"username": "sam", "password": "nope"})
+        failed = ActivityLog.objects.get(action=activity.LOGIN_FAILED)
+        self.assertIsNone(failed.user)
+        self.assertEqual(failed.detail, "username=sam")
+        self.assertNotIn("nope", failed.detail)
+        self.client.post(reverse("accounts:login"), {"username": "sam", "password": "pw-12345-xyz"})
+        self.assertTrue(ActivityLog.objects.filter(user=user, action=activity.LOGIN).exists())
+        self.client.post(reverse("accounts:logout"))
+        self.assertTrue(ActivityLog.objects.filter(user=user, action=activity.LOGOUT).exists())
+
+    def test_log_activity_accepts_no_user(self):
+        entry = activity.log_activity(None, "x", "mod", 7, "d")
+        self.assertEqual((entry.user, entry.object_id), (None, "7"))
+
+    def test_role_change_in_admin_is_logged(self):
+        boss = User.objects.create_superuser("boss", password="pw-12345-xyz")
+        target = make_student()
+        self.client.force_login(boss)
+        url = reverse("admin:accounts_user_change", args=[target.pk])
+        data = {"username": "sam", "role": Role.NURSE, "first_name": "Sam", "last_name": "Cruz",
+                "email": "", "is_active": "on", "date_joined_0": "2026-01-01", "date_joined_1": "00:00:00",
+                # inline management forms
+                "profile-TOTAL_FORMS": "0", "profile-INITIAL_FORMS": "0",
+                "settings-TOTAL_FORMS": "0", "settings-INITIAL_FORMS": "0"}
+        self.client.post(url, data)
+        target.refresh_from_db()
+        self.assertEqual(target.role, Role.NURSE)
+        entry = ActivityLog.objects.get(action=activity.ROLE_CHANGED)
+        self.assertEqual((entry.user, entry.object_id, entry.detail), (boss, str(target.pk), "student -> nurse"))
+
+
+class VisitorPatientTests(TestCase):
+    def test_visitor_needs_no_user(self):
+        v = Patient.objects.create(patient_type="visitor", full_name="Jo Visitor")
+        self.assertIsNone(v.user)
+        self.assertEqual(v.display_name, "Jo Visitor")
+        self.assertIn("Jo Visitor", str(v))
+
+    def test_nameless_patient_without_user_is_rejected(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Patient.objects.create(patient_type="visitor")
+
+    def test_account_holder_name_comes_from_user(self):
+        self.assertEqual(make_student().profile.display_name, "Sam Cruz")
+
+    def test_volunteer_agreement_defaults_to_pending(self):
+        a = VolunteerAgreement.objects.create(user=make_user(Role.VOLUNTEER))
+        self.assertEqual(a.status, "pending")
+
+
+class AdminAccessTests(TestCase):
+    def test_only_admin_role_and_superusers_open_admin(self):
+        index = reverse("admin:index")
+        for role in (Role.NURSE, Role.DOCTOR, Role.DENTIST, Role.VOLUNTEER, Role.STUDENT):
+            u = make_user(role)
+            u.is_staff = True  # even a mistakenly flagged staff user is refused
+            u.save()
+            self.client.force_login(u)
+            self.assertEqual(self.client.get(index).status_code, 302, role)
+        self.client.force_login(make_user(Role.ADMIN))
+        self.assertEqual(self.client.get(index).status_code, 200)
+        self.client.force_login(User.objects.create_superuser("su", password="x"))
+        self.assertEqual(self.client.get(index).status_code, 200)
+
+    def test_system_administrator_manages_accounts_but_not_patient_data(self):
+        admin_user = make_user(Role.ADMIN)
+        student = make_student()
+        self.client.force_login(admin_user)
+        page = self.client.get(reverse("admin:accounts_user_change", args=[student.pk]))
+        self.assertEqual(page.status_code, 200)
+        self.assertNotContains(page, "Health information")
+        self.assertNotContains(page, "Allergies")
+        self.assertEqual(self.client.get(reverse("admin:accounts_activitylog_changelist")).status_code, 200)
+
+    def test_activity_log_cannot_be_edited_from_admin(self):
+        self.client.force_login(User.objects.create_superuser("su", password="x"))
+        self.assertEqual(self.client.get(reverse("admin:accounts_activitylog_add")).status_code, 403)
+
+    def test_superuser_sees_patient_data(self):
+        self.client.force_login(User.objects.create_superuser("su", password="x"))
+        page = self.client.get(reverse("admin:accounts_user_change", args=[make_student().pk]))
+        self.assertContains(page, "Health information")
+
+
+class RenameMigrationTests(TransactionTestCase):
+    """StudentProfile -> Patient must keep every existing row."""
+
+    def test_existing_profiles_survive(self):
+        executor = MigrationExecutor(connection)
+        executor.migrate([("accounts", "0003_backfill_profiles")])
+        old = executor.loader.project_state([("accounts", "0003_backfill_profiles")]).apps
+        u = old.get_model("accounts", "User").objects.create(username="legacy", is_superuser=False)
+        old.get_model("accounts", "StudentProfile").objects.update_or_create(
+            user=u, defaults={"student_id": "2020-00001", "allergies": "Penicillin"}
+        )
+        su = old.get_model("accounts", "User").objects.create(username="rootlegacy", is_superuser=True)
+
+        executor = MigrationExecutor(connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())
+        new = executor.loader.project_state(executor.loader.graph.leaf_nodes()).apps
+        patient = new.get_model("accounts", "Patient").objects.get(user__username="legacy")
+        self.assertEqual((patient.student_id, patient.allergies), ("2020-00001", "Penicillin"))
+        self.assertEqual(patient.patient_type, "student")
+        self.assertFalse(patient.consent_agreed)
+        self.assertEqual(new.get_model("accounts", "User").objects.get(pk=su.pk).role, "admin")
+        self.assertFalse(new.get_model("accounts", "Patient").objects.filter(user_id=su.pk).exists())

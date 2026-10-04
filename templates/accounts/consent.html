@@ -1,0 +1,37 @@
+{% extends "base_auth.html" %}
+{% load ui %}
+{% block title %}Terms and consent{% endblock %}
+{% block content %}
+<section class="anim">
+  <div class="card authcard" style="max-width:560px;text-align:left">
+    <div class="authbrand">
+      <span class="bmark" style="background:var(--navy);color:#fff;width:40px;height:40px;border-radius:12px;display:grid;place-items:center">{% icon "shield" 20 %}</span>
+      <strong style="font-size:20px">MediSync</strong>
+    </div>
+    <h2 class="ptitle" style="font-size:24px">Terms and data privacy consent</h2>
+    <p class="lead" style="margin:12px 0 0">Please read this before MediSync collects any of your health information.</p>
+
+    {# DRAFT wording: the clinic and the university must approve it before real use. #}
+    <div class="sm" style="line-height:1.65;margin-top:18px">
+      <p><strong>What we collect.</strong> Your name, student or employee ID, contact details, health information you give us (such as allergies and blood type), your appointments, and the answers you give in the symptom questionnaire.</p>
+      <p class="mt8"><strong>Why.</strong> To book your visit, manage the clinic queue and keep your clinic record. Triage is queue-priority support only, not a diagnosis. Clinic staff always make the final decision.</p>
+      <p class="mt8"><strong>Who can see it.</strong> Only clinic staff whose role needs it. Every access to your record is logged. Reports use totals only.</p>
+      <p class="mt8"><strong>Your rights.</strong> You can see and download your data from your account, ask for corrections, and ask the clinic about how it is kept, in line with the Data Privacy Act of 2012.</p>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% if error %}<p class="err form">{{ error }}</p>{% endif %}
+      <label class="chk">
+        <input type="checkbox" name="agree" value="1">
+        <span>I have read the terms and I agree that MediSync may collect and use my information as described.</span>
+      </label>
+      <div class="row g10 wrap">
+        {% include "components/button.html" with label="I agree and continue" type="submit" variant="gold" icon="checkc" %}
+        <button type="submit" class="btn btn--outline" formaction="{% url 'accounts:logout' %}" formnovalidate>{% icon "logout" 18 %}<span>Decline and sign out</span></button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

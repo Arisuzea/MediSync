@@ -22,6 +22,8 @@ The project is a Django application built from a working single-file HTML protot
 
 ## Project status
 
+> The current plan and stage list are in `PLAN.md`. The table below is the older student-side plan.
+
 | Stage | Scope | Status |
 |-------|-------|--------|
 | 0 | Project skeleton, split settings, custom User | Complete |
@@ -124,6 +126,7 @@ Environment variables are read from `.env` in the project root:
 | `DEBUG` | No | `False` | Enables debug mode. Settings in `dev.py` set this to `True`. |
 | `ALLOWED_HOSTS` | No | empty list | Comma-separated host names. |
 | `DATABASE_URL` | No | SQLite file in the project root | Database connection string, for example `postgres://user:password@localhost:5432/medisync`. |
+| `SESSION_IDLE_MINUTES` | No | `15` | Minutes of inactivity before a user is signed out. |
 
 The `.env` file, `db.sqlite3` and any file containing credentials are excluded by `.gitignore`. Never commit them. `example.env` must contain placeholder values only.
 
@@ -134,7 +137,10 @@ The `.env` file, `db.sqlite3` and any file containing credentials are excluded b
 | Account | Username | Password | Use |
 |---------|----------|----------|-----|
 | Demo student | `alex.mendoza` | `medisync-demo` | Student pages |
+| Nurse, doctor, dentist, volunteer, administrator | `nurse.demo`, `doctor.demo`, `dentist.demo`, `volunteer.demo`, `admin.demo` | `medisync-demo` | Staff roles (the staff portal arrives in Stage 8) |
 | Superuser | the one you create with `createsuperuser` | your choice | `/admin/` |
+
+A student must accept the terms on first sign-in. `/admin/` opens only for superusers and the `admin.demo` role.
 
 Do not run `seed_demo` on a public server. It creates an account with a published password. Student accounts are created through the admin, because there is no public signup.
 
@@ -157,7 +163,7 @@ medisync/
 |   `-- asgi.py
 |-- apps/
 |   |-- core/                   Layout context, dashboard, help, icons, template tags, seed command
-|   |-- accounts/               User, StudentProfile, UserSettings, authentication views
+|   |-- accounts/               User (with role), Patient, UserSettings, ActivityLog, consent, authentication views
 |   |-- clinic/                 Practitioners, visit reasons, symptoms, availability (Stage 3)
 |   |-- appointments/           Booking flow, Appointment, triage, queue, history (Stages 4 to 8)
 |   `-- notifications/          Notification model and delivery service (Stages 6 and 8)

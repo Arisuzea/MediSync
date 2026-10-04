@@ -1,0 +1,15 @@
+{% extends "base_auth.html" %}
+{% load ui %}
+{% block title %}Staff{% endblock %}
+{% block content %}
+<section class="anim">
+  <div class="card authcard">
+    <h2 class="ptitle" style="font-size:24px">Hello, {{ user.first_display_name }}</h2>
+    <p class="lead" style="margin:12px auto 0">You are signed in as {{ user.get_role_display|lower }}. The staff portal arrives in Stage 8.</p>
+    <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+      {% if user.is_staff and user.role == "admin" %}{% include "components/button.html" with label="Open admin" href="/admin/" variant="gold" icon="settings" block=True %}{% endif %}
+      <button type="submit" class="btn btn--outline btn--block">{% icon "logout" 18 %}<span>Sign out</span></button>
+    </form>
+  </div>
+</section>
+{% endblock %}
