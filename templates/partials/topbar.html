@@ -4,13 +4,12 @@
 
   <div class="htitle">
     <h1>{{ page_meta.title }}</h1>
-    <div class="crumb">{{ page_meta.crumb }}</div>
   </div>
 
   {# Notifications dropdown #}
   <div style="position:relative" data-dropdown>
-    <button type="button" class="ibtn" data-dropdown-trigger aria-label="Notifications" aria-expanded="false">
-      {% icon "bell" 19 %}{% if unread_count %}<span class="badge-dot"></span>{% endif %}
+    <button type="button" class="ibtn bellbtn" data-dropdown-trigger aria-label="Notifications{% if unread_count %} ({{ unread_count }} unread){% endif %}" aria-expanded="false">
+      {% icon "lu-bell" 20 %}{% if unread_count %}<span class="bcount" aria-hidden="true">{% if unread_count > 9 %}9+{% else %}{{ unread_count }}{% endif %}</span>{% endif %}
     </button>
     <div class="dd" style="width:330px" data-dropdown-menu hidden>
       <div class="ddhead"><strong>Notifications</strong></div>
@@ -25,12 +24,16 @@
     </div>
   </div>
 
+  <span class="vdiv" aria-hidden="true"></span>
+
   {# User menu dropdown #}
   <div style="position:relative" data-dropdown>
-    <button type="button" class="avbtn" data-dropdown-trigger aria-expanded="false">
-      <span class="avatar">{{ student.name|initials }}</span>
-      <span style="font-size:13.6px;font-weight:650">{{ student.first_name }}</span>
-      {% icon "cd" 15 %}
+    <button type="button" class="avbtn" data-dropdown-trigger aria-expanded="false" aria-haspopup="true">
+      <span class="avatar" aria-hidden="true">{{ student.name|initials }}</span>
+      <span class="avmeta">
+        <strong>{{ student.name }}</strong>
+        <span>{{ user.get_role_display }}{% if student.student_id %} • {{ student.student_id }}{% endif %}</span>
+      </span>
     </button>
     <div class="dd" style="min-width:230px" data-dropdown-menu hidden>
       <div class="ddhead">

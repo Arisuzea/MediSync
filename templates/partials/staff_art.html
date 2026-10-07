@@ -1,0 +1,4 @@
+{% load static %}{% comment %}
+Illustration slot. Renders static/img/staff/<name>.svg once that file exists; until then a
+labelled placeholder box of the same size. Usage: {% include "partials/staff_art.html" with name="x" w=480 h=310 %}
+{% endcomment %}<img class="s-art" src="{% static 'img/staff/' %}{{ name }}.svg" width="{{ w }}" height="{{ h }}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'s-art',textContent:'{{ name }}.svg',style:'width:{{ w }}px;height:{{ h }}px;max-width:100%;display:grid;place-items:center;border:1px dashed #35408e;border-radius:12px;color:#35408e;font-size:12px'}))">

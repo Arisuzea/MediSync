@@ -1,58 +1,33 @@
 {% load ui %}
 <aside class="sidebar" id="sidebar" aria-label="Main navigation">
-  <div class="brand">
-    <span class="bmark">{% icon "shield" 20 %}</span>
-    <div>
-      <div class="bname">MediSync</div>
-      <div class="bsub">Clinic · Queue</div>
+  <div class="sb-top">
+    <div class="brand">
+      <span class="bmark" aria-hidden="true">M</span>
+      <div>
+        <div class="bname">MediSync</div>
+        <div class="bsub">NU DASMARIÑAS</div>
+      </div>
     </div>
+    <div class="sb-line"></div>
   </div>
 
-  <p class="navlab">Menu</p>
-  <nav>
+  <nav aria-label="Main">
     {% for item in main_nav %}
       {% if item.href %}
         <a class="nav{% if item.active %} on{% endif %}" href="{{ item.href }}"{% if item.active %} aria-current="page"{% endif %}>
       {% else %}
-        <span class="nav is-disabled" aria-disabled="true" title="Coming in a later stage">
+        <span class="nav is-soon" aria-disabled="true" title="Coming in a later stage">
       {% endif %}
-        {% icon item.icon 19 %}<span>{{ item.label }}</span>
-        {% if item.url == "appointments:queue" and active_appointment %}<span class="nav__count">#{{ active_appointment.queue_number }}</span>{% endif %}
+        {% icon item.icon 18 %}<span class="nav__label">{{ item.label }}</span>
+        {% if item.badge == "unread" and unread_count %}<span class="nav__count">{{ unread_count }}</span>{% endif %}
       {% if item.href %}</a>{% else %}</span>{% endif %}
     {% endfor %}
   </nav>
 
-  <p class="navlab">Support</p>
-  <nav>
-    {% for item in support_nav %}
-      {% if item.href %}
-        <a class="nav{% if item.active %} on{% endif %}" href="{{ item.href }}"{% if item.active %} aria-current="page"{% endif %}>
-      {% else %}
-        <span class="nav is-disabled" aria-disabled="true">
-      {% endif %}
-        {% icon item.icon 19 %}<span>{{ item.label }}</span>
-      {% if item.href %}</a>{% else %}</span>{% endif %}
-    {% endfor %}
-  </nav>
-
-  <div class="sidecard">
-    <p class="b" style="color:#fff;font-size:13px">{% icon "act" 14 %} Live queue</p>
-    <p style="margin-top:8px">
-      {% if active_appointment %}
-        Now serving <strong style="color:#E4C862">#{{ queue.serving }}</strong> · you are <strong style="color:#fff">#{{ active_appointment.queue_number }}</strong>
-      {% else %}
-        No active appointment. Book to join the queue.
-      {% endif %}
-    </p>
-    <div class="mt14">
-      {% safe_url "appointments:queue" as queue_url %}
-      {% safe_url "appointments:book" as book_url %}
-      {% if active_appointment %}
-        {% include "components/button.html" with label="Open queue" href=queue_url variant="gold" size="sm" block=True icon="list" %}
-      {% else %}
-        {% include "components/button.html" with label="Book now" href=book_url variant="gold" size="sm" block=True icon="calplus" %}
-      {% endif %}
-    </div>
+  <div class="sb-bottom">
+    <div class="sb-line"></div>
+    <button type="button" class="nav nav--out" data-modal-open="signout">
+      {% icon "lu-log-out" 18 %}<span class="nav__label">Logout</span>
+    </button>
   </div>
-  <p class="sfoot">Prototype build · triage is not a diagnosis.</p>
 </aside>

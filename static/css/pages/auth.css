@@ -1,5 +1,39 @@
-.authwrap{max-width:none;min-height:calc(100vh - 6px);display:grid;place-items:center;padding:24px}
-.authcard{width:100%;max-width:440px;padding:40px 32px;text-align:center}
-.authcard form{text-align:left;margin-top:26px;display:grid;gap:16px}
-.authcard .err.form{justify-content:center;margin-top:0}
-.authbrand{display:inline-flex;align-items:center;gap:10px;margin-bottom:22px}
+/* Login (Figma 01-03 Login). Full-width navy header, centred 480px panel, footer rule. */
+.authpage{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.authhead{flex:none;height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 32px;background:var(--sidebar)}
+.authhead .brand{gap:12px}
+.authhead .bmark{width:36px;height:36px;font-size:18px}
+.authhead .bname{font-size:20px}
+.authhead__tag{font-size:12px;font-weight:600;color:#fff;opacity:.72;line-height:normal}
+.authwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:48px;padding:64px 24px 48px;max-width:none}
+.authcard{width:100%;max-width:480px;padding:39px;display:flex;flex-direction:column;gap:24px;box-shadow:0 8px 24px rgba(11,30,54,.07)}
+.authintro{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.authmark{width:48px;height:48px;border-radius:8px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:24px;font-weight:800;line-height:1}
+.authname{font-size:24px;font-weight:800;color:var(--navy);line-height:normal}
+.authtitle{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:0;line-height:normal}
+.authsub{font-size:14px;color:var(--muted);line-height:normal}
+.authform{display:flex;flex-direction:column;gap:24px}
+.authfields{display:flex;flex-direction:column;gap:18px}
+.authalert{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:8px;background:var(--danger-bg);border:1px solid var(--danger);color:var(--danger)}
+.authalert p{font-size:12px;font-weight:600;line-height:normal}
+.afield{display:flex;flex-direction:column;gap:8px}
+.afield__head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.afield label.lb{margin:0;font-size:13px;font-weight:700;color:var(--navy);line-height:normal}
+.afield__req{font-size:12px;font-weight:600;color:var(--danger);line-height:normal}
+.afield input{height:48px;padding:0 14px}
+.afield .err{margin:0;gap:6px;font-size:12px;color:var(--danger);line-height:normal}
+.afield .err svg{flex:none}
+.afield.has-error input{border-color:var(--danger)}
+.pw{position:relative}
+.pw input{padding-right:46px}
+.pw__btn{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;padding:0;border:none;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.pw__btn [hidden]{display:none}
+.authform .btn--lg{width:100%}
+.authlink{align-self:center;font-size:13px;font-weight:600;color:var(--navy);text-decoration:underline;text-underline-position:from-font}
+.authnote{font-size:12px;color:var(--muted);text-align:center;margin-top:-8px;line-height:1.5}
+.authfoot{width:100%;max-width:736px}
+@media(max-width:760px){
+ .authhead{padding:0 16px}.authhead__tag{display:none}
+ .authwrap{padding:32px 16px 32px}
+ .authcard{padding:28px 20px}
+}

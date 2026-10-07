@@ -239,8 +239,8 @@ class RoleTests(TestCase):
             self.client.force_login(make_user(role))
             for name in PATIENT_URLS:
                 resp = self.client.get(reverse(name))
-                if name == "core:dashboard":  # login lands here, then moves on to the staff page
-                    self.assertRedirects(resp, reverse("core:staff_home"), fetch_redirect_response=False)
+                if name in ("core:dashboard", "appointments:queue"):  # staff get their own version
+                    self.assertEqual(resp.status_code, 200, f"{role} {name}")
                 else:
                     self.assertEqual(resp.status_code, 403, f"{role} {name}")
 
@@ -280,7 +280,7 @@ class ConsentTests(TestCase):
         self.assertTrue(resp["Location"].startswith(self.url))
 
     def test_terms_page_and_logout_stay_reachable(self):
-        self.assertContains(self.client.get(self.url), "Terms and data privacy consent")
+        self.assertContains(self.client.get(self.url), "Terms and Conditions &amp; Consent")
         resp = self.client.post(reverse("accounts:logout"))
         self.assertRedirects(resp, reverse("accounts:login"), fetch_redirect_response=False)
 

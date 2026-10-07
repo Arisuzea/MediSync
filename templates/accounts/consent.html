@@ -1,37 +1,39 @@
-{% extends "base_auth.html" %}
+{% extends "base_staff.html" %}
 {% load ui %}
 {% block title %}Terms and consent{% endblock %}
+{% block body_class %} s--scrim{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
 {% block content %}
-<section class="anim">
-  <div class="card authcard" style="max-width:560px;text-align:left">
-    <div class="authbrand">
-      <span class="bmark" style="background:var(--navy);color:#fff;width:40px;height:40px;border-radius:12px;display:grid;place-items:center">{% icon "shield" 20 %}</span>
-      <strong style="font-size:20px">MediSync</strong>
-    </div>
-    <h2 class="ptitle" style="font-size:24px">Terms and data privacy consent</h2>
-    <p class="lead" style="margin:12px 0 0">Please read this before MediSync collects any of your health information.</p>
-
-    {# DRAFT wording: the clinic and the university must approve it before real use. #}
-    <div class="sm" style="line-height:1.65;margin-top:18px">
-      <p><strong>What we collect.</strong> Your name, student or employee ID, contact details, health information you give us (such as allergies and blood type), your appointments, and the answers you give in the symptom questionnaire.</p>
-      <p class="mt8"><strong>Why.</strong> To book your visit, manage the clinic queue and keep your clinic record. Triage is queue-priority support only, not a diagnosis. Clinic staff always make the final decision.</p>
-      <p class="mt8"><strong>Who can see it.</strong> Only clinic staff whose role needs it. Every access to your record is logged. Reports use totals only.</p>
-      <p class="mt8"><strong>Your rights.</strong> You can see and download your data from your account, ask for corrections, and ask the clinic about how it is kept, in line with the Data Privacy Act of 2012.</p>
-    </div>
-
-    <form method="post" novalidate>
-      {% csrf_token %}
-      <input type="hidden" name="next" value="{{ next }}">
-      {% if error %}<p class="err form">{{ error }}</p>{% endif %}
-      <label class="chk">
-        <input type="checkbox" name="agree" value="1">
-        <span>I have read the terms and I agree that MediSync may collect and use my information as described.</span>
-      </label>
-      <div class="row g10 wrap">
-        {% include "components/button.html" with label="I agree and continue" type="submit" variant="gold" icon="checkc" %}
-        <button type="submit" class="btn btn--outline" formaction="{% url 'accounts:logout' %}" formnovalidate>{% icon "logout" 18 %}<span>Decline and sign out</span></button>
-      </div>
-    </form>
+<form method="post" novalidate class="s-modal" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <header>
+    <h1 id="consent-title">Terms and Conditions &amp; Consent</h1>
+    <button type="submit" class="s-x" formaction="{% url 'accounts:logout' %}" formnovalidate aria-label="Decline and sign out">{% icon "lu-x" 20 %}</button>
+  </header>
+  <div class="s-notice">{% icon "lu-info" 20 %}<p>This is sample consent copy for a design demonstration, not an official university policy or legal document.</p></div>
+  {# DRAFT wording: the clinic and the university must approve it before real use. #}
+  <div class="s-scroll" tabindex="0">
+    {% if user.is_patient_role %}
+      <h2>Sample patient privacy agreement</h2>
+      <div><p>1. What we collect</p><p>Your name, student or employee ID, contact details, health information you give us (such as allergies and blood type), your appointments, and the answers you give in the symptom questionnaire.</p></div>
+      <div><p>2. Why</p><p>To book your visit, manage the clinic queue and keep your clinic record. Triage is queue-priority support only, not a diagnosis. Clinic staff always make the final decision.</p></div>
+      <div><p>3. Who can see it</p><p>Only clinic staff whose role needs it. Every access to your record is logged. Reports use totals only.</p></div>
+      <div><p>4. Your rights</p><p>You can see and download your data from your account, ask for corrections, and ask the clinic about how it is kept, in line with the Data Privacy Act of 2012.</p></div>
+    {% else %}
+      <h2>Sample staff access agreement</h2>
+      <div><p>1. Purpose of access</p><p>This demonstration portal supports clinic staff in coordinating patient visits, maintaining sample records, and managing university clinic resources.</p></div>
+      <div><p>2. Confidentiality and appropriate use</p><p>Only access information needed for your assigned duties. Do not share credentials or patient information with unauthorized people. Verify the intended recipient before sending any message.</p></div>
+      <div><p>3. Clinical responsibility</p><p>Automated suggestions do not replace professional judgment. Clinic staff remain responsible for final priority decisions and emergency escalation.</p></div>
+      <div><p>4. Accountability</p><p>Record updates and staff actions may be logged for review. Follow your institution’s approved procedures for corrections and retention.</p></div>
+    {% endif %}
   </div>
-</section>
+  {% if error %}<p class="err" role="alert">{{ error }}</p>{% endif %}
+  <label class="s-agree"><input class="s-chk" type="checkbox" name="agree" value="1"><span>I have read the sample terms and agree to continue.</span></label>
+  <footer>
+    <button type="submit" class="s-btn" formaction="{% url 'accounts:logout' %}" formnovalidate style="width:104px">Decline</button>
+    <button type="submit" class="s-btn s-btn--solid">Accept and continue</button>
+  </footer>
+</form>
 {% endblock %}

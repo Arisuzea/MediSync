@@ -2,23 +2,69 @@
 {% load static ui %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/pages/queue.css' %}">{% endblock %}
 {% block content %}
-<section class="anim">
-  <h2 class="ptitle">Queue status</h2>
-  <p class="lead">Live position and estimated wait. Sample data until Stage 7 connects the real queue.</p>
-  <div class="grid g2 mt26">
-    <div class="card">
-      <div class="chead"><div><h3>Your position</h3><p>{{ appt.practitioner }} · {{ appt.date|date:"M j" }} at {{ appt.time|time:"g:i A" }}</p></div>{% include "components/badge.html" with tone="med" text=appt.priority %}</div>
-      <div class="row between"><span class="sm muted">Your number</span><strong style="font-size:28px">#{{ appt.queue_number }}</strong></div>
-      <div class="row between mt8"><span class="sm muted">Now serving</span><strong>#{{ q.serving }}</strong></div>
-      <div class="row between mt8"><span class="sm muted">Students ahead</span><strong>{{ q.ahead }}</strong></div>
-      <div class="row between mt8"><span class="sm muted">Estimated wait</span><strong>{{ q.wait }}</strong></div>
-    </div>
-    <div class="card">
-      <div class="chead"><div><h3>Appointment</h3><p>{{ appt.reason }}</p></div></div>
-      <p class="sm">{{ appt.practitioner }}, {{ appt.role }}</p>
-      <p class="sm muted mt8">{{ appt.room }}</p>
-      <p class="xs muted mt20">Arrive 15 minutes early and bring your student ID.</p>
-    </div>
+<section class="stack anim">
+  <div class="phead">
+    <h2>Clinic Live Queue Status</h2>
+    <p>Monitor real-time patient queue calling and estimated clinic room entry timers.</p>
   </div>
+
+  {% if not appt %}
+    <div class="card">
+      {% safe_url "appointments:book" as book_url %}
+      {% include "components/empty_state.html" with icon="list" title="You are not currently in any active queue" text="Book an appointment and your queue number appears here." cta_label="Book Appointment" cta_href=book_url %}
+    </div>
+  {% else %}
+    {% if q.called %}
+      <div class="callout" role="status">
+        <span class="callout__ic">{% icon "lu-bell-ring" 15 %}</span>
+        <div>
+          <strong>You are being called!</strong>
+          <p>Please proceed directly to {{ appt.room }} – {{ appt.practitioner }} for your {{ appt.service }} consultation.</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="qgrid">
+      <div class="grow">
+        <div class="card qpanel qpanel--main">
+          <div class="qhead">
+            <h3 class="qtitle">Current Queue Progress</h3>
+            {% with tone=appt.priority|priority_tone %}
+              <span class="tag {% if tone == 'high' %}tag--red{% elif tone == 'med' %}tag--amber{% else %}tag--green{% endif %}">Triage: {{ appt.priority|title }}</span>
+            {% endwith %}
+          </div>
+          <div class="qstats">
+            <div class="qstat"><small>Now serving</small><b>#{{ q.serving }}</b></div>
+            <span class="qvline" aria-hidden="true"></span>
+            <div class="qstat gold"><small>Your ticket</small><b>#{{ appt.queue_number }}</b></div>
+            <span class="qvline" aria-hidden="true"></span>
+            <div class="qstat wait"><small>Estimated wait</small><b>{{ q.wait }}</b></div>
+          </div>
+          <div>
+            <div class="qtrack" role="progressbar" aria-label="Queue progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ q.progress }}"><div class="qfill" style="width:{{ q.progress }}%"></div></div>
+            <div class="qcap">
+              <span>{% if q.ahead > 0 %}There {% if q.ahead == 1 %}is 1 patient{% else %}are {{ q.ahead }} patients{% endif %} ahead of you.{% else %}You are next in line.{% endif %}</span>
+              {% if q.ahead > 0 %}<span>Queue #{{ q.next_up }} is next up.</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="card qpanel qpanel--side">
+          <h3 class="qtitle">Queue Destination Details</h3>
+          <div class="qdetail">
+            <div class="qrow">{% icon "lu-user-cog" 20 %}<div><small>Assigned clinic room</small><b class="room">{{ appt.room }} – {{ appt.service }} Section</b></div></div>
+            <div class="qrow">{% icon "lu-user-round" 20 %}<div><small>Attending doctor</small><b class="doc">{{ appt.practitioner }}</b></div></div>
+          </div>
+          <div class="dline"></div>
+          <div class="qactions">
+            {% include "components/button.html" with label="Cancel Queue Ticket" variant="outline" size="md" block=True soon=True %}
+            <a class="ulink" href="{% url 'core:dashboard' %}">← Back to Dashboard</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 </section>
 {% endblock %}

@@ -9,13 +9,22 @@ User = get_user_model()
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(
-        label="Username",
-        widget=forms.TextInput(attrs={"autofocus": True, "autocomplete": "username"}),
+        label="University ID or Username",
+        widget=forms.TextInput(attrs={
+            "autofocus": True,
+            "autocomplete": "username",
+            "placeholder": "Enter your university ID or username",
+        }),
+        error_messages={"required": "University ID or Username is required."},
     )
     password = forms.CharField(
         label="Password",
         strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}),
+        widget=forms.PasswordInput(attrs={
+            "autocomplete": "current-password",
+            "placeholder": "Enter your password",
+        }),
+        error_messages={"required": "Password is required."},
     )
     error_messages = {
         **AuthenticationForm.error_messages,

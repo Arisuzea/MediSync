@@ -1,0 +1,47 @@
+{% extends "base_staff.html" %}
+{% load ui %}
+{% block title %}Queue Management{% endblock %}
+{% block content %}
+<div class="s-work">
+  <div class="s-pagehead">
+    <div><h1>Queue Management</h1><p>{{ n_patients }} patients today · {{ n_waiting }} waiting · {{ n_consult }} in consultation · {{ n_done }} completed</p></div>
+    <div class="s-actions">
+      <a class="s-btn" href="{% url 'appointments:queue' %}" style="width:104px">Refresh</a>
+      <span class="s-btn s-btn--solid">Add to queue</span>
+    </div>
+  </div>
+
+  <div class="s-notice">{% icon "lu-info" 20 %}<p>AI priority is a suggestion only. Clinic staff make the final decision. Not for real emergencies.</p></div>
+
+  <section class="s-card s-reg">
+    <div class="s-filters">
+      <div class="s-field" style="width:360px"><label for="q-search">Search patients</label>
+        <div class="s-input"><input id="q-search" type="search" placeholder="Search name or queue number">{% icon "lu-search" 18 %}</div></div>
+      <div class="s-field" style="width:208px"><label for="q-pri">Priority</label>
+        <div class="s-input"><select id="q-pri"><option>All priorities</option><option>High</option><option>Medium</option><option>Low</option></select>{% icon "lu-chevron-down" 18 %}</div></div>
+      <div class="s-field" style="width:240px"><label for="q-svc">Service</label>
+        <div class="s-input"><select id="q-svc"><option>All clinic services</option></select>{% icon "lu-chevron-down" 18 %}</div></div>
+      <p class="s-date">05 Oct 2026 · Updated 09:42 AM</p>
+    </div>
+
+    <div class="s-table">
+      <div class="s-row s-th"><span>Queue no.</span><span>Patient</span><span>Type</span><span>Symptoms</span><span>AI suggested priority</span><span>Status</span><span>Actions</span></div>
+      {% for r in queue_rows %}
+      <div class="s-row">
+        <b>{{ r.no }}</b><span>{{ r.name }}</span><span>{{ r.type }}</span><span>{{ r.symptoms }}</span>
+        <span><span class="s-pri s-pri--{{ r.priority|lower }}">{{ r.priority }}</span></span>
+        <span><span class="s-st s-st--{{ r.status|slugify }}">{{ r.status }}</span></span>
+        <span class="lnk">{% if r.status == "Completed" %}View record{% else %}View · Override{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="s-pager">
+      <span>Showing {{ n_patients }} of {{ n_patients }} entries</span>
+      <div><span class="s-btn">Previous</span><span class="s-btn s-btn--solid s-btn--sq">1</span><span class="s-btn">Next</span></div>
+    </div>
+  </section>
+
+  <div class="s-notice s-notice--err">{% icon "lu-triangle-alert" 20 %}<p>Emergency concern? Stop the routine queue, notify the on-duty clinician immediately, and follow the clinic’s emergency escalation procedure.</p></div>
+</div>
+{% endblock %}

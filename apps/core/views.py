@@ -1,7 +1,6 @@
-from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
-from apps.accounts.models import STAFF_ROLES
+from apps.accounts.models import PATIENT_ROLES, STAFF_ROLES
 from apps.accounts.permissions import RoleRequiredMixin
 
 from . import mock
@@ -9,33 +8,44 @@ from .utils import safe_reverse
 
 
 class DashboardView(RoleRequiredMixin, TemplateView):
-    template_name = "core/dashboard.html"
+    allowed_roles = PATIENT_ROLES + STAFF_ROLES
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated and not request.user.is_patient_role:
-            return redirect("core:staff_home")  # where login lands for staff accounts
-        return super().dispatch(request, *args, **kwargs)
+    def get_template_names(self):
+        # Staff get the Figma clinic dashboard; patients keep the student one.
+        return ["core/staff_dashboard.html" if self.request.user.role in STAFF_ROLES else "core/dashboard.html"]
+
+    # (label, icon, url name or None when the page is not built yet)
+    QUICK_ACTIONS = [
+        ("Book Appointment", "lu-calendar-plus", "appointments:book"),
+        ("View Queue", "lu-user-round", "appointments:queue"),
+        ("View Health Record", "lu-circle-x", None),
+        ("View Appointments", "lu-calendar-clock", "appointments:history"),
+        ("View Certificates", "lu-award", None),
+        ("View Prescriptions", "lu-bottle-wine", None),
+    ]
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        tiles = [
-            {"icon": "calplus", "label": "Book Appointment", "hint": "Doctor or dentist, in 60 seconds", "url": "appointments:book", "tone": ""},
-            {"icon": "list", "label": "View Queue", "hint": "Live position & wait estimate", "url": "appointments:queue", "tone": "nv"},
-            {"icon": "history", "label": "Visit History", "hint": "Records, notes & follow-ups", "url": "appointments:history", "tone": "nv"},
-            {"icon": "user", "label": "Medical Profile", "hint": "Allergies, blood type, contacts", "url": "accounts:profile", "tone": ""},
+        if self.request.user.role in STAFF_ROLES:
+            ctx.update(mock.staff_overview())
+            return ctx
+        quick_actions = [
+            {
+                "label": label,
+                "icon": icon,
+                "href": safe_reverse(url) if url else "",
+                "soon": not url,
+                "variant": "gold" if i == 0 else "outline",
+            }
+            for i, (label, icon, url) in enumerate(self.QUICK_ACTIONS)
         ]
-        for t in tiles:
-            t["href"] = safe_reverse(t["url"])
         ctx.update(
             appointment=mock.APPOINTMENT,
-            recent=mock.RECENT,
-            tiles=tiles,
+            schedule=mock.SCHEDULE,
+            quick_actions=quick_actions,
             book_url=safe_reverse("appointments:book"),
             queue_url=safe_reverse("appointments:queue"),
-            confirmation_url=safe_reverse("appointments:confirmation"),
             schedule_url=safe_reverse("appointments:schedule"),
-            history_url=safe_reverse("appointments:history"),
-            help_url=safe_reverse("core:help"),
         )
         return ctx
 

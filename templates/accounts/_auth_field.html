@@ -1,0 +1,20 @@
+{% load ui %}{% comment %}
+Login-style field: label row (with "* Required Field" on error), widget, error messages.
+Usage: {% include "accounts/_auth_field.html" with field=form.password toggle=True %}
+{% endcomment %}<div class="afield{% if field.errors %} has-error{% endif %}">
+  <div class="afield__head">
+    <label class="lb" for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% if field.errors %}<span class="afield__req">* Required Field</span>{% endif %}
+  </div>
+  {% if toggle %}
+    <div class="pw">
+      {{ field }}
+      <button type="button" class="pw__btn" data-pw-toggle aria-label="Show password" aria-pressed="false">
+        <span data-pw-off>{% icon "lu-eye-off" 18 %}</span><span data-pw-on hidden>{% icon "lu-eye" 18 %}</span>
+      </button>
+    </div>
+  {% else %}
+    {{ field }}
+  {% endif %}
+  {% for error in field.errors %}<p class="err">{% icon "lu-circle-alert" 14 %}<span>{{ error }}</span></p>{% endfor %}
+</div>

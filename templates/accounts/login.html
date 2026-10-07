@@ -1,25 +1,72 @@
-{% extends "base_auth.html" %}
+{% extends "base_staff.html" %}
 {% load ui %}
 {% block title %}Sign in{% endblock %}
+{% block header %}
+<header class="s-head s-head--id">
+  <span class="s-logo">NU logo</span>
+  <b class="s-brand" style="font-size:20px;font-weight:600">MediSync Dasmariñas</b>
+  <span class="s-portal">UNIVERSITY CLINIC · STAFF PORTAL</span>
+</header>
+{% endblock %}
+{% block footer %}{% endblock %}
 {% block content %}
-<section class="anim">
-  <div class="card authcard">
-    <div class="authbrand">
-      <span class="bmark" style="background:var(--navy);color:#fff;width:40px;height:40px;border-radius:12px;display:grid;place-items:center">{% icon "shield" 20 %}</span>
-      <strong style="font-size:20px">MediSync</strong>
+<div class="s-login">
+  <section class="s-welcome">
+    <div class="s-mesh">
+      {# Figma 1:384 "Medical illustration" (480x310). Export it to static/img/staff/login-illustration.svg #}
+      {% include "partials/staff_art.html" with name="login-illustration" w=480 h=310 %}
     </div>
-    <h2 class="ptitle" style="font-size:26px">Sign in</h2>
-    <p class="lead" style="margin:12px auto 0">Use the account issued by Student Health Services. Your queue position and booking are saved to it.</p>
-    <form method="post" novalidate>
-      {% csrf_token %}
-      <input type="hidden" name="next" value="{{ next }}">
-      {% for error in form.non_field_errors %}<p class="err form">{{ error }}</p>{% endfor %}
-      {% include "components/form_field.html" with field=form.username %}
-      {% include "components/form_field.html" with field=form.password %}
-      <div class="mt8">{% include "components/button.html" with label="Sign in" type="submit" variant="gold" icon="checkc" block=True %}</div>
-    </form>
-    <p class="xs muted mt20">For your security you are signed out after {{ idle_minutes }} minutes of inactivity.</p>
-    <p class="xs muted mt8">Triage is queue-priority support only, not a diagnosis.</p>
-  </div>
-</section>
+    <h1>One campus. Connected care.</h1>
+    <p>A calmer workspace for the people who care for our university community. Coordinate visits, records, and clinic resources in one place.</p>
+    <div class="s-uni">{% icon "lu-shield-check" 20 %}<span>National University Dasmariñas · Secure staff access</span></div>
+  </section>
+
+  <form method="post" novalidate class="s-panel">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <p class="cap">SIGN IN AS</p>
+    <div class="s-roles" role="radiogroup" aria-label="Sign in as">
+      <label><input type="radio" name="role" value="admin" checked><span>Admin</span></label>
+      <label><input type="radio" name="role" value="nurse"><span>Nurse</span></label>
+      <label><input type="radio" name="role" value="doctor"><span>Doctor</span></label>
+      <label><input type="radio" name="role" value="dentist"><span>Dentist</span></label>
+      <label><input type="radio" name="role" value="student"><span>Student</span></label>
+    </div>
+    <div class="s-card s-cred">
+      <header>
+        <h1>Staff sign in</h1>
+        <h2>Welcome back</h2>
+        <p>Use your authorized university clinic account.</p>
+      </header>
+      {% if form.errors %}
+        <div class="s-alert" role="alert">{% if form.non_field_errors %}{% for error in form.non_field_errors %}{{ error }} {% endfor %}{% else %}Please complete the required fields below.{% endif %}</div>
+      {% endif %}
+      <div class="s-fields">
+        <div class="s-field">
+          <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+          <div class="s-input">{{ form.username }}</div>
+          {% for error in form.username.errors %}<p class="err">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="s-field">
+          <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+          <div class="s-input pw">
+            {{ form.password }}
+            <button type="button" class="s-eye" data-pw-toggle aria-label="Show password" aria-pressed="false">
+              <span data-pw-off>{% icon "lu-eye-off" 18 %}</span><span data-pw-on hidden>{% icon "lu-eye" 18 %}</span>
+            </button>
+          </div>
+          {% for error in form.password.errors %}<p class="err">{{ error }}</p>{% endfor %}
+        </div>
+      </div>
+      {% safe_url "accounts:password_recovery" as recovery_url %}
+      <div class="s-row2">
+        <label class="s-remember"><input class="s-chk" type="checkbox" name="remember">Remember Me</label>
+        <a class="s-forgot" href="{{ recovery_url }}">Forgot Password?</a>
+      </div>
+      <button type="submit" class="s-signin">Sign In</button>
+    </div>
+    <p class="fine">Authorized personnel only. Access is recorded for accountability.</p>
+    <p class="fine">For your security you are signed out after {{ idle_minutes }} minutes of inactivity.</p>
+  </form>
+</div>
 {% endblock %}

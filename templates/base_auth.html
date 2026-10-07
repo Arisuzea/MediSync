@@ -1,7 +1,23 @@
 {% extends "base.html" %}
 {% block extra_css %}{% load static %}<link rel="stylesheet" href="{% static 'css/pages/auth.css' %}">{% endblock %}
 {% block shell %}
-<main id="main" tabindex="-1" class="authwrap">
-  {% block content %}{% endblock %}
-</main>
+<div class="authpage">
+  <header class="authhead">
+    <div class="brand">
+      <span class="bmark" aria-hidden="true">M</span>
+      <div>
+        <div class="bname">MediSync</div>
+        <div class="bsub">NU DASMARIÑAS</div>
+      </div>
+    </div>
+    <p class="authhead__tag">CLINICIAN &amp; PATIENT PORTAL</p>
+  </header>
+  <main id="main" tabindex="-1" class="authwrap">
+    {% block content %}{% endblock %}
+    <footer class="pfoot authfoot">
+      <p>MediSync Clinician &amp; Patient Portal • National University Dasmariñas</p>
+      <p>Secure university access</p>
+    </footer>
+  </main>
+</div>
 {% endblock %}

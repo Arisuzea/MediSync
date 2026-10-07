@@ -13,14 +13,17 @@ def icon(name, size=18):
 
     Falls back to the "info" icon for unknown names (same as the prototype).
     The path data comes from our own icons.py, so it is safe to mark as HTML.
+    Lucide icons ("lu-" prefix) use Lucide's stroke width of 2, prototype icons 1.8.
     """
     paths = mark_safe(ICONS.get(name, ICONS["info"]))
+    stroke = 2 if str(name).startswith("lu-") else 1.8
     return format_html(
         '<svg width="{0}" height="{0}" viewBox="0 0 24 24" fill="none" '
-        'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '
+        'stroke="currentColor" stroke-width="{2}" stroke-linecap="round" '
         'stroke-linejoin="round" aria-hidden="true">{1}</svg>',
         size,
         paths,
+        stroke,
     )
 
 
@@ -31,6 +34,13 @@ def initials(full_name):
     if not parts:
         return "?"
     return (parts[0][0] + (parts[1][0] if len(parts) > 1 else "")).upper()
+
+
+@register.filter
+def short_date(value):
+    """date(2026, 9, 25) -> 'Sept 25, 2026' (the mockup spells September 'Sept')."""
+    text = f"{value:%b} {value.day}, {value.year}"
+    return text.replace("Sep ", "Sept ", 1)
 
 
 @register.simple_tag

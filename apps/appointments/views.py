@@ -6,6 +6,7 @@ them one by one with real views backed by Appointment, queue and history queries
 
 from django.views.generic import TemplateView
 
+from apps.accounts.models import PATIENT_ROLES, STAFF_ROLES
 from apps.accounts.permissions import RoleRequiredMixin
 from apps.core import mock
 
@@ -59,10 +60,17 @@ class ConfirmationView(PlaceholderView):
 
 
 class QueueView(RoleRequiredMixin, TemplateView):
-    template_name = "appointments/queue.html"
+    allowed_roles = PATIENT_ROLES + STAFF_ROLES
+
+    def get_template_names(self):
+        # Staff get the Figma queue management table; patients keep their own ticket view.
+        return ["appointments/staff_queue.html" if self.request.user.role in STAFF_ROLES else "appointments/queue.html"]
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        if self.request.user.role in STAFF_ROLES:
+            ctx.update(mock.staff_overview())
+            return ctx
         ctx["appt"] = mock.APPOINTMENT
         ctx["q"] = mock.queue_summary(mock.APPOINTMENT)
         return ctx

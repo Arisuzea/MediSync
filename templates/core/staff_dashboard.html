@@ -1,0 +1,60 @@
+{% extends "base_staff.html" %}
+{% load ui %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="s-work">
+  <div class="s-pagehead">
+    <div><h1>Dashboard</h1><p>Your clinic at a glance. Monday, 05 October 2026</p></div>
+    <div class="s-actions">
+      <span class="s-btn">Tap ID check in</span>
+      <a class="s-btn s-btn--solid s-btn--ring" href="{% safe_url 'appointments:book' %}">New appointment</a>
+    </div>
+  </div>
+
+  <section class="s-banner s-mesh" style="display:flex">
+    <div>
+      <h2>Good morning, {{ user.first_display_name }}.</h2>
+      <p>A little coordination goes a long way toward better campus care.</p>
+      <small>CLINIC OPEN · 8:00 AM – 5:00 PM</small>
+    </div>
+    {# Figma 1:648 "Medical illustration" (210x128). Export it to static/img/staff/dashboard-illustration.svg #}
+    {% include "partials/staff_art.html" with name="dashboard-illustration" w=210 h=128 %}
+  </section>
+
+  <section class="s-metrics">
+    <div class="s-card s-metric"><header>Patients today {% icon "lu-users" 18 %}</header><div><b>{{ n_patients }}</b><small>{{ n_students }} students · {{ n_staff }} staff</small></div></div>
+    <div class="s-card s-metric"><header>Waiting {% icon "lu-clock-3" 18 %}</header><div><b>{{ n_waiting }}</b><small>{{ n_consult }} patient in consultation</small></div></div>
+    <div class="s-card s-metric"><header>Appointments today {% icon "lu-calendar-days" 18 %}</header><div><b>{{ staff_appointments|length|add:1 }}</b><small>{{ staff_appointments|length }} upcoming · 1 completed</small></div></div>
+    <div class="s-card s-metric"><header>Low-stock items {% icon "lu-package" 18 %}</header><div><b>2</b><small class="bad">Review replenishment needs</small></div></div>
+  </section>
+
+  <section class="s-ops">
+    <div class="s-card s-live">
+      <div class="s-cardhead"><h2>Live queue</h2><a href="{% url 'appointments:queue' %}">Open queue →</a></div>
+      <p class="s-serving">Currently serving Q-023 · Andrea Mae Dela Cruz · General consultation</p>
+      <div class="s-track" aria-hidden="true"><i style="width:{{ n_done_share }}%"></i></div>
+      <div class="s-table">
+        <div class="s-row s-th"><span>Queue</span><span>Patient</span><span>Symptoms</span><span>AI priority</span><span>Status</span></div>
+        {% for r in waiting_rows %}
+        <div class="s-row">
+          <b>{{ r.no }}</b><span>{{ r.name }}</span><span>{{ r.symptoms }}</span>
+          <span><span class="s-pri s-pri--{{ r.priority|lower }}">{{ r.priority }}</span></span>
+          <span><span class="s-st s-st--{{ r.status|slugify }}">{{ r.status }}</span></span>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="s-small">Staff make the final priority decision. Emergency cases must be escalated immediately.</p>
+    </div>
+
+    <div class="s-card s-side">
+      <div class="s-cardhead"><h2>Upcoming appointments</h2><a href="{% safe_url 'appointments:history' %}">View all →</a></div>
+      {% for a in staff_appointments %}
+      <div class="s-appt"><time>{{ a.time }}</time><div><b>{{ a.name }}</b><span>{{ a.service }}</span></div></div>
+      {% endfor %}
+      <h3>Useful actions</h3>
+      <div class="s-actions"><span class="s-btn">Register patient</span><span class="s-btn">Review stock</span></div>
+      <p class="s-small">All sample records are fictional.</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

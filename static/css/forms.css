@@ -1,8 +1,9 @@
 .field{margin-top:6px}
 label.lb{display:block;font-size:13.4px;font-weight:700;margin-bottom:7px}
 .req{color:var(--bad);margin-left:3px}
-select,input,textarea{width:100%;border:1.5px solid #DCE2EE;border-radius:12px;padding:12px 13px;background:#fff;font-size:14.4px;transition:.18s}
-select:focus,input:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(11,31,58,.09)}
+select,input,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:13px 14px;background:#fff;font-size:14px;transition:.18s}
+::placeholder{color:var(--muted);opacity:.62}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(11,30,54,.09)}
 textarea{min-height:132px;resize:vertical;line-height:1.6}
 .bad-in{border-color:#E9A9A3!important;background:#FFFCFB}
 .err{color:var(--bad);font-size:12.6px;font-weight:600;margin-top:6px;display:flex;gap:6px;align-items:center}

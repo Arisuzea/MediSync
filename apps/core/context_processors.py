@@ -4,7 +4,7 @@ from django.conf import settings
 from django.urls import NoReverseMatch, reverse
 
 from . import mock
-from .navigation import MAIN_NAV, SUPPORT_NAV, page_meta
+from .navigation import MAIN_NAV, page_meta
 
 # Pages that belong to the booking flow highlight "Dashboard" in the prototype
 # only for priority/confirmation; we keep that behaviour here.
@@ -15,9 +15,9 @@ def _resolve(items, current):
     resolved = []
     for item in items:
         try:
-            href = reverse(item["url"])
+            href = reverse(item["url"]) if item["url"] else ""
         except NoReverseMatch:
-            href = ""  # page not built yet -> sidebar shows it disabled
+            href = ""  # page not built yet -> sidebar shows it inert
         active = current == item["url"] or (
             item["url"] == "core:dashboard" and current in _DASHBOARD_ALSO
         )
@@ -46,7 +46,6 @@ def layout(request):
         return ctx  # staff pages (Stage 8) bring their own shell
     ctx.update(
         main_nav=_resolve(MAIN_NAV, current),
-        support_nav=_resolve(SUPPORT_NAV, current),
         student=_student(request.user),
         # TEMPORARY (Stages 3-8 replace these with real data):
         notifications=mock.NOTIFICATIONS,

@@ -1,0 +1,53 @@
+{% load static ui %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ page_meta.title }}{% endblock %} — MediSync</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/staff.css' %}">
+</head>
+<body class="s{% block body_class %}{% endblock %}">
+  {% block header %}
+  {% with page=request.resolver_match.url_name %}
+  <header class="s-head">
+    <div class="s-brand">
+      {% icon "lu-grid-2x2" 20 %}
+      <span class="s-logo">NU logo</span>
+      <b>MediSync Dasmariñas</b>
+    </div>
+    <nav class="s-nav" aria-label="Main">
+      <a href="{% url 'core:dashboard' %}"{% if page == 'dashboard' %} class="on" aria-current="page"{% endif %}>Dashboard</a>
+      <a href="{% url 'appointments:queue' %}"{% if page == 'queue' %} class="on" aria-current="page"{% endif %}>Patient Care ⌄</a>
+      <span>Records ⌄</span><span>Messages</span><span>Inventory</span><span>Analytics ⌄</span><span>Administration ⌄</span>
+    </nav>
+    <div class="s-act">
+      {% icon "lu-search" 20 %}
+      <span class="s-bell">{% icon "lu-bell" 20 %}</span>
+      <div class="s-who"><span>Hi, <b>{{ user.display_name }}</b></span><small>{{ user.get_role_display }}</small></div>
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+        <button class="s-av" type="submit" title="Sign out" aria-label="Sign out">{{ user.display_name|initials }}</button>
+      </form>
+    </div>
+  </header>
+  {% endwith %}
+  {% endblock %}
+
+  <main id="main" class="s-main" style="display:contents">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}
+  <footer class="s-foot">
+    <span>National University Dasmariñas • University clinic</span>
+    <span>Demo workspace · 05 Oct 2026 · Restricted staff access</span>
+  </footer>
+  {% endblock %}
+
+  <script type="module" src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
